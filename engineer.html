@@ -144,6 +144,7 @@
         }
 
         textarea {
+            width: 100%;
             resize: vertical;
             min-height: 100px;
             font-family: inherit;
@@ -355,7 +356,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 15px;
         }
 
@@ -430,7 +431,7 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>업무 수행 기록 시스템</h1>
+            <h1>MA집사</h1>
             <div class="header-info">
                 <div class="user-info">
                     <span id="currentUser"></span>
@@ -442,53 +443,47 @@
     </div>
 
     <div class="container">
-        <div class="left-panel">
-            <div class="card">
-                <div class="card-header">업무 기록 등록</div>
-                <div class="card-body">
-                    <div id="formMessage"></div>
-                    
-                    <div class="form-group">
-                        <label for="clientSelect">고객사 선택 *</label>
-                        <select id="clientSelect" onchange="updateProjects()" required>
-                            <option value="">고객사를 선택하세요</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="projectSelect">프로젝트 선택 *</label>
-                        <select id="projectSelect" onchange="updateEquipments()" required disabled>
-                            <option value="">프로젝트를 선택하세요</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="equipmentSelect">장비 선택 *</label>
-                        <select id="equipmentSelect" required disabled>
-                             <option value="">장비를 선택하세요</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-row">
-                         <div class="form-group">
-                            <label for="performer">수행자 *</label>
-                            <input type="text" id="performer" placeholder="수행자명" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="workDate">수행일자 *</label>
-                            <input type="date" id="workDate" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="workContent">업무 내용 *</label>
-                        <textarea id="workContent" placeholder="수행한 업무 내용을 입력하세요" required></textarea>
-                    </div>
-                    
-                    <button class="btn" id="saveBtn" onclick="addWork()">업무 기록 저장</button>
-                </div>
-            </div>
+  <div class="left-panel">
+    <div class="card">
+      <div class="card-header">업무 기록 등록</div>
+      <div class="card-body">
+        <!-- 고객사, 프로젝트, 장비 -->
+        <div class="form-group">
+          <label for="clientSelect">고객사 선택 *</label>
+          <select id="clientSelect"></select>
         </div>
+
+        <div class="form-group">
+          <label for="projectSelect">프로젝트 선택 *</label>
+          <select id="projectSelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="equipmentSelect">장비 선택 *</label>
+          <select id="equipmentSelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="workDate">수행일자 *</label>
+          <input type="date" id="workDate" />
+        </div>
+
+        <div class="form-group">
+          <label for="workContent">업무 내용 *</label>
+          <textarea id="workContent"></textarea>
+        </div>
+
+        <button class="btn" id="saveBtn">업무 기록 저장</button>
+      </div>
+    </div>
+
+    <!-- 여기에 기능 추가 박스 -->
+    <div class="card">
+      <div class="card-body">
+        <div class="no-data">🔧 기능 추가 준비중</div>
+      </div>
+    </div>
+  </div>
 
         <div class="right-panel">
             <div class="card">
@@ -506,10 +501,6 @@
                         <div class="stat-card">
                             <span class="stat-number" id="weeklyWorks">0</span>
                             <div class="stat-label">이번 주</div>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-number" id="activeProjects">0</span>
-                            <div class="stat-label">활성 PJT</div>
                         </div>
                     </div>
                 </div>
@@ -549,7 +540,7 @@
         let isEngineer = false;
         let engineerAssignments = []; // 엔지니어의 할당 정보 저장
         
-        const API_BASE = 'https://ma-helper-test-1.onrender.com/api';
+        const API_BASE = 'https://ma-helper.onrender.com/api';
 
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
@@ -584,14 +575,23 @@
         // 페이지 초기화
         async function initializePage() {
             const today = new Date();
-            document.getElementById('workDate').value = today.toISOString().split('T')[0];
+            // 오늘 날짜를 수행일자에 설정
+            const todayStr = today.toISOString().split('T')[0];
+            document.getElementById('workDate').value = todayStr;
             document.getElementById('currentDate').textContent = formatFullDate(today);
-            
+
             if (currentUser) {
-                document.getElementById('performer').value = isEngineer ? currentUser.name : currentUser.client_name;
+                const performerEl = document.getElementById('performer');
+                if (performerEl) {
+                    performerEl.value = isEngineer ? currentUser.name : currentUser.client_name;
+                }
             }
 
+            // 초기 데이터 불러온 뒤에 반드시 goToToday 호출
             await loadInitialData();
+
+            // 초기화 완료 후 오늘 날짜로 이동 및 달력 렌더링
+            goToToday(); // 중요!!
         }
 
         // 초기 데이터 로드
@@ -715,7 +715,7 @@
             const project = document.getElementById('projectSelect').value;
             const equipment = document.getElementById('equipmentSelect').value;
             const date = document.getElementById('workDate').value;
-            const performer = document.getElementById('performer').value;
+            const performer = currentUser.name; // 현재 로그인한 엔지니어의 이름
             const content = document.getElementById('workContent').value;
 
             if (!client || !project || !equipment || !date || !performer || !content) {
@@ -821,54 +821,70 @@
             return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
         }
 
-        // 달력 업데이트
-        function updateCalendar() {
-            const calendar = document.getElementById('calendar');
-            const calendarTitle = document.getElementById('calendarTitle');
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            calendarTitle.textContent = `${year}년 ${month + 1}월`;
-            
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - firstDay.getDay());
-            
-            const days = ['일', '월', '화', '수', '목', '금', '토'];
-            const today = new Date();
-            let calendarHTML = '';
-            
-            days.forEach(day => {
-                calendarHTML += `<div class="calendar-day-header">${day}</div>`;
-            });
-            
-            for (let i = 0; i < 42; i++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + i);
-                const dateString = date.toISOString().split('T')[0];
-                const dayWorks = workRecords.filter(work => work.date === dateString);
-                
-                let classes = 'calendar-day';
-                if (date.getMonth() !== month) classes += ' other-month';
-                if (date.toDateString() === today.toDateString()) classes += ' today';
-                if (selectedDate && date.toDateString() === selectedDate.toDateString()) classes += ' selected';
-                
-                let dayContent = `<div class="day-number">${date.getDate()}</div>`;
-                if (dayWorks.length > 0) {
-                    dayContent += `<div class="work-count">${dayWorks.length}</div>`;
-                    dayContent += `<div class="work-preview">${dayWorks[0].project} 외 ${dayWorks.length - 1}건</div>`;
-                }
-                calendarHTML += `<div class="${classes}" onclick="selectDate('${dateString}')">${dayContent}</div>`;
-            }
-            calendar.innerHTML = calendarHTML;
+        // 전역 변수
+let selectedDateString = ''; // Date 객체 대신 문자열 저장
+
+function selectDate(dateString) {
+    // 1. 수행일자 입력란에 날짜 설정
+    document.getElementById('workDate').value = dateString;
+
+    // 2. 선택한 날짜 문자열 저장
+    selectedDateString = dateString;
+
+    // 3. 달력 다시 그림 (선택 강조 포함)
+    updateCalendar();
+}
+
+function updateCalendar() {
+    const calendar = document.getElementById('calendar');
+    const calendarTitle = document.getElementById('calendarTitle');
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const today = new Date();
+
+    calendarTitle.textContent = `${year}년 ${month + 1}월`;
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+    let calendarHTML = '';
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    days.forEach(day => {
+        calendarHTML += `<div class="calendar-day-header">${day}</div>`;
+    });
+
+    for (let i = 0; i < 42; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const dateString = `${yyyy}-${mm}-${dd}`; // 문자열 형식으로 변환
+
+        const isToday = date.toDateString() === today.toDateString();
+        const isOtherMonth = date.getMonth() !== month;
+        const isSelected = selectedDateString === dateString;
+
+        let classes = 'calendar-day';
+        if (isOtherMonth) classes += ' other-month';
+        if (isToday) classes += ' today';
+        if (isSelected) classes += ' selected';
+
+        const dayWorks = workRecords.filter(work => work.date === dateString);
+        let dayContent = `<div class="day-number">${date.getDate()}</div>`;
+        if (dayWorks.length > 0) {
+            dayContent += `<div class="work-count">${dayWorks.length}</div>`;
+            dayContent += `<div class="work-preview">${dayWorks[0].project}</div>`;
         }
 
-        // 날짜 선택
-        function selectDate(dateString) {
-            selectedDate = new Date(dateString);
-            document.getElementById('workDate').value = dateString;
-            updateCalendar();
-        }
+        calendarHTML += `<div class="${classes}" onclick="selectDate('${dateString}')">${dayContent}</div>`;
+    }
+
+    calendar.innerHTML = calendarHTML;
+}
 
         // 달력 네비게이션
         function previousMonth() {
@@ -881,10 +897,17 @@
             updateCalendar();
         }
         function goToToday() {
-            currentDate = new Date();
-            selectedDate = new Date();
-            document.getElementById('workDate').value = new Date().toISOString().split('T')[0];
-            updateCalendar();
+            const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    currentDate = new Date(today); // 현재 달력을 오늘로
+    selectedDateString = todayStr;
+    document.getElementById('workDate').value = todayStr;
+
+    updateCalendar();
         }
 
         // 통계 업데이트
