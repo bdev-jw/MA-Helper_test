@@ -390,6 +390,48 @@ app.get('/api/clients', async (req, res) => {
     }
 });
 
+// 엔지니어별 업무 기록 조회 API
+app.get('/api/engineer-records/:engineerId', async (req, res) => {
+    try {
+        const engineerId = req.params.engineerId;
+        
+        // 모든 클라이언트의 maintenance_data에서 해당 엔지니어의 기록 찾기
+        const clients = await Client.find({});
+        const engineerRecords = [];
+        
+        clients.forEach(client => {
+            if (client.maintenance_data) {
+                Object.keys(client.maintenance_data).forEach(equipment => {
+                    const records = client.maintenance_data[equipment];
+                    if (Array.isArray(records)) {
+                        records.forEach(record => {
+                            if (record.manager === engineerId) {
+                                engineerRecords.push({
+                                    id: `${client.id}_${equipment}_${record.date}`,
+                                    project: client.business_info?.project_name || '프로젝트명 없음',
+                                    client: client.client_name,
+                                    equipment: equipment,
+                                    date: record.date,
+                                    performer: record.manager,
+                                    content: record.content
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+        
+        // 날짜순 정렬 (최신순)
+        engineerRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        res.json(engineerRecords);
+    } catch (error) {
+        console.error('엔지니어 기록 조회 오류:', error);
+        res.status(500).json({ message: '서버 오류', error: error.message });
+    }
+});
+
 // ✅ 404 에러 처리
 app.use((req, res) => {
     console.log(`❌ 404 - 경로를 찾을 수 없음: ${req.method} ${req.path}`);
