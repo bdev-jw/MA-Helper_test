@@ -394,10 +394,22 @@ app.get('/api/clients', async (req, res) => {
 app.get('/api/engineer-records/:engineerId', async (req, res) => {
     try {
         const engineerId = req.params.engineerId;
+        console.log('📌 엔지니어 기록 조회 요청:', engineerId); // 디버깅용
         
-        // 모든 클라이언트의 maintenance_data에서 해당 엔지니어의 기록 찾기
         const clients = await Client.find({});
+        console.log('📌 클라이언트 수:', clients.length); // 디버깅용
+        
         const engineerRecords = [];
+        
+        // 엔지니어 정보 조회 (이름으로 매칭하기 위해)
+        const engineer = await Engineer.findOne({ id: engineerId });
+        if (!engineer) {
+            console.log('❌ 엔지니어를 찾을 수 없음:', engineerId);
+            return res.json([]);
+        }
+        
+        const engineerName = engineer.name;
+        console.log('📌 엔지니어 이름:', engineerName); // 디버깅용
         
         clients.forEach(client => {
             if (client.maintenance_data) {
@@ -405,10 +417,11 @@ app.get('/api/engineer-records/:engineerId', async (req, res) => {
                     const records = client.maintenance_data[equipment];
                     if (Array.isArray(records)) {
                         records.forEach(record => {
-                            if (record.manager === engineerId) {
+                            // manager 필드가 엔지니어 이름과 일치하는지 확인
+                            if (record.manager === engineerName) {
                                 engineerRecords.push({
                                     id: `${client.id}_${equipment}_${record.date}`,
-                                    project: client.business_info?.project_name || '프로젝트명 없음',
+                                    project: client.business_info?.project_name || equipment,
                                     client: client.client_name,
                                     equipment: equipment,
                                     date: record.date,
@@ -422,12 +435,14 @@ app.get('/api/engineer-records/:engineerId', async (req, res) => {
             }
         });
         
+        console.log('📌 찾은 기록 수:', engineerRecords.length); // 디버깅용
+        
         // 날짜순 정렬 (최신순)
         engineerRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
         
         res.json(engineerRecords);
     } catch (error) {
-        console.error('엔지니어 기록 조회 오류:', error);
+        console.error('❌ 엔지니어 기록 조회 오류:', error);
         res.status(500).json({ message: '서버 오류', error: error.message });
     }
 });
