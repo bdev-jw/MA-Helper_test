@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -426,6 +427,15 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        .card.no-data-card {
+            flex-grow: 1;
+            min-height: 150px;
+            max-height: 390px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -443,47 +453,56 @@
     </div>
 
     <div class="container">
-  <div class="left-panel">
-    <div class="card">
-      <div class="card-header">업무 기록 등록</div>
-      <div class="card-body">
-        <!-- 고객사, 프로젝트, 장비 -->
-        <div class="form-group">
-          <label for="clientSelect">고객사 선택 *</label>
-          <select id="clientSelect"></select>
+        <div class="left-panel">
+            <div class="card">
+                <div class="card-header">업무 기록 등록</div>
+                <div class="card-body">
+                    <!-- 메시지 표시 영역 추가 -->
+                    <div id="formMessage"></div>
+                    
+                    <!-- 고객사, 프로젝트, 장비 -->
+                    <div class="form-group">
+                        <label for="clientSelect">고객사 선택 *</label>
+                        <select id="clientSelect">
+                            <option value="">고객사를 선택하세요</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="projectSelect">프로젝트 선택 *</label>
+                        <select id="projectSelect" disabled>
+                            <option value="">프로젝트를 선택하세요</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="equipmentSelect">장비 선택 *</label>
+                        <select id="equipmentSelect" disabled>
+                            <option value="">장비를 선택하세요</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workDate">수행일자 *</label>
+                        <input type="date" id="workDate" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workContent">업무 내용 *</label>
+                        <textarea id="workContent"></textarea>
+                    </div>
+
+                    <button class="btn" id="saveBtn" onclick="addWork()">업무 기록 저장</button>
+                </div>
+            </div>
+
+            <!-- 여기에 기능 추가 박스 -->
+            <div class="card no-data-card">
+                <div class="card-body">
+                    <div class="no-data">🔧 AI 기능 추가 준비중</div>
+                </div>
+            </div>
         </div>
-
-        <div class="form-group">
-          <label for="projectSelect">프로젝트 선택 *</label>
-          <select id="projectSelect"></select>
-        </div>
-
-        <div class="form-group">
-          <label for="equipmentSelect">장비 선택 *</label>
-          <select id="equipmentSelect"></select>
-        </div>
-
-        <div class="form-group">
-          <label for="workDate">수행일자 *</label>
-          <input type="date" id="workDate" />
-        </div>
-
-        <div class="form-group">
-          <label for="workContent">업무 내용 *</label>
-          <textarea id="workContent"></textarea>
-        </div>
-
-        <button class="btn" id="saveBtn">업무 기록 저장</button>
-      </div>
-    </div>
-
-    <!-- 여기에 기능 추가 박스 -->
-    <div class="card">
-      <div class="card-body">
-        <div class="no-data">🔧 기능 추가 준비중</div>
-      </div>
-    </div>
-  </div>
 
         <div class="right-panel">
             <div class="card">
@@ -546,7 +565,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
             initializePage();
+            setupEventListeners(); // 이벤트 리스너 설정
         });
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            // 고객사 선택 이벤트
+            document.getElementById('clientSelect').addEventListener('change', updateProjects);
+            
+            // 프로젝트 선택 이벤트
+            document.getElementById('projectSelect').addEventListener('change', updateEquipments);
+        }
+
+        // 로그아웃 함수
+        function logout() {
+            localStorage.removeItem('loggedEngineer');
+            localStorage.removeItem('loggedClient');
+            window.location.href = 'index.html';
+        }
 
         // 인증 확인
         function checkAuth() {
@@ -562,7 +598,7 @@
             if (clientData) {
                 currentUser = JSON.parse(clientData);
                 isEngineer = false;
-                 document.getElementById('currentUser').textContent = `고객사: ${currentUser.client_name}`;
+                document.getElementById('currentUser').textContent = `고객사: ${currentUser.client_name}`;
                 // 고객사는 이 페이지의 모든 기능을 사용할 수 없으므로 리디렉션하거나 UI를 비활성화해야 합니다.
                 // 여기서는 엔지니어 기능에 집중합니다.
                 return;
@@ -780,16 +816,21 @@
             document.getElementById('equipmentSelect').disabled = true;
         }
 
-        // 메시지 표시
+        // 메시지 표시 (수정됨)
         function showMessage(message, type) {
             const messageDiv = document.getElementById('formMessage');
-            messageDiv.className = type;
-            messageDiv.textContent = message;
-            
-            setTimeout(() => {
-                messageDiv.textContent = '';
-                messageDiv.className = '';
-            }, 5000);
+            if (messageDiv) {
+                messageDiv.className = type;
+                messageDiv.textContent = message;
+                
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                    messageDiv.className = '';
+                }, 5000);
+            } else {
+                // 폴백: alert 사용
+                alert(message);
+            }
         }
 
         // 업무 목록 업데이트
@@ -924,7 +965,7 @@ function updateCalendar() {
             document.getElementById('totalWorks').textContent = workRecords.length;
             document.getElementById('monthlyWorks').textContent = thisMonth.length;
             document.getElementById('weeklyWorks').textContent = thisWeek.length;
-            document.getElementById('activeProjects').textContent = uniqueProjects.length;
+            
         }
     </script>
 </body>
