@@ -260,6 +260,7 @@
             transition: background-color 0.2s;
             position: relative;
             background: white;
+            overflow: hidden;
         }
 
         .calendar-day:hover {
@@ -300,12 +301,13 @@
         }
 
         .work-preview {
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             color: #7f8c8d;
             margin-top: 2px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            line-height: 1.2; /* 추가 */
         }
 
         .work-list {
@@ -436,6 +438,48 @@
             align-items: center;
             justify-content: center;
         }
+
+        .day-number.saturday {
+            color: blue;
+        }
+        .day-number.holiday {
+            color: red;
+        }
+
+        /* 검색 기능 스타일 */
+        .search-container-inline {
+            display: flex;
+            align-items: center;
+            position: relative;
+            margin-right: 15px;
+        }
+
+        .search-input-inline {
+            width: 0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #bdc3c7;
+            background-color: #fff;
+            color: #333;
+            transition: width 0.3s ease-in-out;
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        .search-input-inline.active {
+            width: 200px;
+            visibility: visible;
+            opacity: 1;
+        }
+
+        #searchIcon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            filter: brightness(0) invert(1); /* 아이콘을 흰색으로 변경 */
+            transition: opacity 0.3s;
+        }
+
     </style>
 </head>
 <body>
@@ -443,6 +487,10 @@
         <div class="header-content">
             <h1>MA집사</h1>
             <div class="header-info">
+                <div id="searchContainerInline" class="search-container-inline">
+                    <input type="text" id="searchInputInline" class="search-input-inline" placeholder="기록 검색">
+                </div>
+                <img id="searchIcon" src="public/검색.png" alt="Search">
                 <div class="user-info">
                     <span id="currentUser"></span>
                 </div>
@@ -575,6 +623,9 @@
             
             // 프로젝트 선택 이벤트
             document.getElementById('projectSelect').addEventListener('change', updateEquipments);
+
+            // 검색 이벤트 리스너 호출 추가
+            setupSearchEventListeners();
         }
 
         // 로그아웃 함수
@@ -670,6 +721,83 @@
                 console.error('엔지니어 데이터 로드 실패:', error);
                 showMessage(error.message, 'error');
             }
+        }
+
+        // 업무 기록 검색 함수
+        function searchWorkRecords(searchTerm) {
+            // '기타' 고객사를 제외하고 검색
+            const recordsToSearch = workRecords.filter(work => work.client !== '기타');
+            
+            return recordsToSearch.filter(work => {
+                const client = work.client?.toLowerCase() || '';
+                const project = work.project?.toLowerCase() || '';
+                const performer = work.performer?.toLowerCase() || '';
+                const content = work.content?.toLowerCase() || '';
+                const date = work.date || '';
+
+                return client.includes(searchTerm) ||
+                    project.includes(searchTerm) ||
+                    performer.includes(searchTerm) ||
+                    content.includes(searchTerm) ||
+                    date.includes(searchTerm);
+            });
+        }
+
+        // 필터링된 업무 기록을 '최근 업무 기록' 목록에 렌더링하는 함수
+        function renderFilteredWorkRecords(records) {
+            const workList = document.getElementById('workList');
+            if (records.length === 0) {
+                workList.innerHTML = '<div class="no-data">검색된 업무 기록이 없습니다.</div>';
+                return;
+            }
+            // 검색 결과는 최신순으로 정렬하여 상위 8개만 표시
+            const sortedRecords = records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            workList.innerHTML = sortedRecords.slice(0, 8).map(work => `
+                <div class="work-item">
+                    <div class="work-header">
+                        <div class="project-name">${work.project}</div>
+                        <div class="work-date">${formatDate(work.date)}</div>
+                    </div>
+                    <div class="work-meta">${work.client} · ${work.performer}</div>
+                    <div class="work-content">${work.content}</div>
+                </div>
+            `).join('');
+        }
+
+        // 검색 UI 이벤트 리스너 설정 함수
+        function setupSearchEventListeners() {
+            const searchIcon = document.getElementById('searchIcon');
+            const searchInputInline = document.getElementById('searchInputInline');
+
+            searchIcon.addEventListener('click', function(event) {
+                event.stopPropagation();
+                searchInputInline.classList.toggle('active');
+                if (searchInputInline.classList.contains('active')) {
+                    searchInputInline.focus();
+                } else {
+                    searchInputInline.value = '';
+                    updateWorkList(); // 원래 목록으로 복원
+                }
+            });
+
+            searchInputInline.addEventListener('input', function(event) {
+                const searchTerm = event.target.value.toLowerCase().trim();
+                if (searchTerm) {
+                    const searchResults = searchWorkRecords(searchTerm);
+                    renderFilteredWorkRecords(searchResults);
+                } else {
+                    updateWorkList(); // 검색어가 없으면 원래 목록으로 복원
+                }
+            });
+            
+            // ESC 키를 누르면 검색창이 닫히도록 설정
+            searchInputInline.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    searchInputInline.value = '';
+                    searchInputInline.classList.remove('active');
+                    updateWorkList();
+                }
+            });
         }
 
         // 고객사 선택 시 프로젝트 드롭다운 업데이트
@@ -831,11 +959,20 @@
         // 업무 목록 업데이트
         function updateWorkList() {
             const workList = document.getElementById('workList');
-            if (workRecords.length === 0) {
+
+            // '기타' 고객사 제외한 업무 기록만 필터링 (더 엄격한 조건)
+            const filteredRecords = workRecords.filter(work => {
+                return work.client && work.client.trim() !== '기타';
+            });
+            
+            console.log('전체 기록 수:', workRecords.length);
+            console.log('필터링된 기록 수:', filteredRecords.length);
+
+            if (filteredRecords.length === 0) {
                 workList.innerHTML = '<div class="no-data">등록된 업무 기록이 없습니다.</div>';
                 return;
             }
-            workList.innerHTML = workRecords.slice(0, 8).map(work => `
+            workList.innerHTML = filteredRecords.slice(0, 8).map(work => `
                 <div class="work-item">
                     <div class="work-header">
                         <div class="project-name">${work.project}</div>
@@ -871,56 +1008,91 @@ function selectDate(dateString) {
     updateCalendar();
 }
 
-function updateCalendar() {
-    const calendar = document.getElementById('calendar');
-    const calendarTitle = document.getElementById('calendarTitle');
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const today = new Date();
+// 2025년 대한민국 공휴일 정보 (월별로 날짜만 포함)
+        function getKoreanHolidays(year, month) {
+            if (year !== 2025) return []; // 2025년만 지원
 
-    calendarTitle.textContent = `${year}년 ${month + 1}월`;
-
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
-
-    let calendarHTML = '';
-    const days = ['일', '월', '화', '수', '목', '금', '토'];
-    days.forEach(day => {
-        calendarHTML += `<div class="calendar-day-header">${day}</div>`;
-    });
-
-    for (let i = 0; i < 42; i++) {
-        const date = new Date(startDate);
-        date.setDate(startDate.getDate() + i);
-
-        const yyyy = date.getFullYear();
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const dd = String(date.getDate()).padStart(2, '0');
-        const dateString = `${yyyy}-${mm}-${dd}`; // 문자열 형식으로 변환
-
-        const isToday = date.toDateString() === today.toDateString();
-        const isOtherMonth = date.getMonth() !== month;
-        const isSelected = selectedDateString === dateString;
-
-        let classes = 'calendar-day';
-        if (isOtherMonth) classes += ' other-month';
-        if (isToday) classes += ' today';
-        if (isSelected) classes += ' selected';
-
-        const dayWorks = workRecords.filter(work => work.date === dateString);
-        let dayContent = `<div class="day-number">${date.getDate()}</div>`;
-        if (dayWorks.length > 0) {
-            dayContent += `<div class="work-count">${dayWorks.length}</div>`;
-            dayContent += `<div class="work-preview">${dayWorks[0].project}</div>`;
+            const holidays = {
+                1: [1, 27, 28, 29, 30], // 신정, 설날 연휴
+                3: [1, 3],             // 삼일절
+                5: [1, 5, 6],             // 어린이날, 부처님 오신 날
+                6: [3, 6],             // 현충일
+                8: [15],            // 광복절
+                10: [3, 6, 7, 8, 9],   // 개천절, 추석 연휴, 한글날
+                12: [25]            // 크리스마스
+            };
+            return holidays[month] || [];
         }
 
-        calendarHTML += `<div class="${classes}" onclick="selectDate('${dateString}')">${dayContent}</div>`;
-    }
 
-    calendar.innerHTML = calendarHTML;
-}
+function updateCalendar() {
+    const calendar = document.getElementById('calendar');
+            const calendarTitle = document.getElementById('calendarTitle');
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const today = new Date();
+            
+            // 2단계에서 추가한 함수를 호출하여 현재 월의 공휴일 정보 가져오기
+            const holidays = getKoreanHolidays(year, month + 1);
+
+            calendarTitle.textContent = `${year}년 ${month + 1}월`;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            let calendarHTML = '';
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            days.forEach(day => {
+                calendarHTML += `<div class="calendar-day-header">${day}</div>`;
+            });
+
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                const dateString = `${yyyy}-${mm}-${dd}`;
+
+                const isToday = date.toDateString() === today.toDateString();
+                const isOtherMonth = date.getMonth() !== month;
+                const isSelected = selectedDateString === dateString;
+                
+                // --- 로직 수정/추가 부분 ---
+                const dayOfWeek = date.getDay(); // 0:일요일, 6:토요일
+                const day = date.getDate();
+                let dayClass = '';
+                // 일요일이거나 공휴일이면 'holiday' 클래스 적용
+                if (dayOfWeek === 0 || holidays.includes(day)) {
+                    dayClass = 'holiday';
+                // 토요일이면 'saturday' 클래스 적용
+                } else if (dayOfWeek === 6) {
+                    dayClass = 'saturday';
+                }
+                // --- 여기까지 ---
+
+                let classes = 'calendar-day';
+                if (isOtherMonth) classes += ' other-month';
+                if (isToday) classes += ' today';
+                if (isSelected) classes += ' selected';
+
+                const dayWorks = workRecords.filter(work => work.date === dateString && work.client !== '기타');
+                
+                // dayClass를 day-number div에 적용
+                let dayContent = `<div class="day-number ${dayClass}">${day}</div>`;
+                if (dayWorks.length > 0) {
+                    dayContent += `<div class="work-count">${dayWorks.length}</div>`;
+                    dayContent += `<div class="work-preview">${dayWorks[0].project}</div>`;
+                }
+
+                calendarHTML += `<div class="${classes}" onclick="selectDate('${dateString}')">${dayContent}</div>`;
+            }
+
+            calendar.innerHTML = calendarHTML;
+        }
 
         // 달력 네비게이션
         function previousMonth() {
@@ -946,21 +1118,22 @@ function updateCalendar() {
     updateCalendar();
         }
 
-        // 통계 업데이트
+        // updateStats 함수 전체 수정
         function updateStats() {
+            // '기타' 고객사 제외한 업무 기록만 필터링
+            const filteredRecords = workRecords.filter(work => work.client !== '기타');
+            
             const now = new Date();
-            const thisMonth = workRecords.filter(work => {
+            const thisMonth = filteredRecords.filter(work => {
                 const workDate = new Date(work.date);
                 return workDate.getMonth() === now.getMonth() && workDate.getFullYear() === now.getFullYear();
             });
             const thisWeekStart = new Date(now.setDate(now.getDate() - now.getDay()));
-            const thisWeek = workRecords.filter(work => new Date(work.date) >= thisWeekStart);
-            const uniqueProjects = [...new Set(workRecords.map(work => work.project))];
+            const thisWeek = filteredRecords.filter(work => new Date(work.date) >= thisWeekStart);
             
-            document.getElementById('totalWorks').textContent = workRecords.length;
+            document.getElementById('totalWorks').textContent = filteredRecords.length;
             document.getElementById('monthlyWorks').textContent = thisMonth.length;
             document.getElementById('weeklyWorks').textContent = thisWeek.length;
-            
         }
     </script>
 </body>
