@@ -3,14 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MA집사 - 고객사용</title>
+    <title>사업 및 유지보수 정보</title>
     <style>
-        /* engineer.html의 기본 스타일 */
+        /* Engineer.html Design System */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
+        /* --- START: 개선사항 --- */
+        :root {
+            --header-height: 67px; /* 1. 헤더 높이를 변수로 지정 */
+        }
+        /* --- END: 개선사항 --- */
 
         body {
             font-family: 'Malgun Gothic', sans-serif;
@@ -19,66 +25,61 @@
             line-height: 1.6;
         }
 
-        .header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1001;
-        }
-
-        .header-content {
+        .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 20px 85px 20px;
+        }
+
+        .app-title {
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        .header h1 {
+            padding: 15px 20px;
             font-size: 1.8rem;
             font-weight: 600;
+            background-color: #2c3e50;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: var(--header-height); /* 1. 변수 사용 */
         }
 
-        .header-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        .sticky-top-panel {
+            position: sticky;
+            top: var(--header-height); /* 1. 변수 사용 */
+            background-color: #f5f5f5;
+            z-index: 99;
+            padding-bottom: 10px;
+            padding-top: 20px; /* 2. margin 대신 padding으로 간격 조정 */
         }
         
-        /* 고객사 정보 헤더 */
-        .sub-header {
-            background-color: #ffffff;
-            padding: 15px 20px;
-            border-bottom: 1px solid #ddd;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-
-        .client-info-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
+        .maintenance-card-scroller {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 15px;
+            padding: 5px 0 10px 0;
+            width: 100%;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
 
-        .client-logo {
-            height: 40px;
-            object-fit: contain;
+        .maintenance-card-scroller::-webkit-scrollbar {
+            display: none;
         }
-
-        .project-name {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #2c3e50;
+        
+        #searchIcon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            filter: brightness(0) invert(1);
         }
 
         .search-container-inline {
-            display: flex;
-            align-items: center;
+            display: none;
             position: relative;
         }
 
@@ -89,217 +90,281 @@
             border: 1px solid #bdc3c7;
             background-color: #fff;
             color: #333;
-            transition: width 0.3s;
+            transition: width 0.3s ease-in-out;
             visibility: hidden;
+            opacity: 0;
         }
 
         .search-input-inline.active {
             width: 200px;
             visibility: visible;
+            opacity: 1;
         }
 
-        #searchIcon {
-            width: 30px;
-            height: 30px;
+        #clearSearchBtn {
+            display: none;
+            margin-left: 8px;
             cursor: pointer;
-            filter: brightness(0) invert(1);
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 20px auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: 450px 1fr;
-            gap: 20px;
-        }
-
-        .left-panel, .right-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card-header {
-            background-color: #34495e;
             color: white;
-            padding: 15px 20px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            border-radius: 8px 8px 0 0;
-        }
-
-        .card-body {
-            padding: 20px;
-            flex-grow: 1;
+            background: #e74c3c;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
         }
         
-        .business-info-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .business-info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #ecf0f1;
-        }
-        
-        .business-info-item:last-child {
-            border-bottom: none;
-        }
-
-        .info-title {
-            font-weight: 600;
+        h1 {
+            text-align: center;
+            font-weight: bold;
             color: #2c3e50;
+            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            margin: 0 auto 20px; /* 2. 상단 margin 제거 */
+        }
+        
+        .header-flex {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
-        .info-content {
-            color: #34495e;
+        .header-logo {
+            height: clamp(50px, 4vw, 50px);
+            object-fit: contain;
         }
 
-        .equipment-scroll-container {
+        .header-title {
+            font-size: clamp(30px, 5vw, 32px);
+            color: #2c3e50;
+            margin: 0;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .business-card-container {
+            width: 100%;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-            padding: 5px;
-            max-height: 200px;
-            overflow-y: auto;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 10px 0;
         }
+
+        .business-card {
+            padding: 15px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: 100px;
+            max-height: 150px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+        }
+
+        .card-content {
+            font-size: 0.8rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        #equipmentTabsContainer {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .scroll-container {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(110px, 1fr);
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .scroll-container::-webkit-scrollbar { display: none; }
 
         .equipment-button {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 10px;
-            border: 1px solid #bdc3c7;
-            border-radius: 6px;
+            height: 70px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease-in-out;
-            background-color: #f8f9fa;
+            background-color: #ecf0f1;
+            color: #2c3e50;
         }
 
         .equipment-button:hover {
-            border-color: #3498db;
-            background-color: #eaf5fc;
+            background-color: #e0e6e8;
+            border-color: #bdc3c7;
         }
 
+        .equipment-button.has-records { /* records가 있을 때의 기본 색상 (active와 다르게) */
+            background-color: #d1e4f3; /* 예시: 약간 더 연한 파란색 또는 다른 색상 */
+            color: #2c3e50;
+            border-color: #a7d1ed;
+        }
+        
         .equipment-button.active {
-            background-color: #3498db;
+            background-color: #2980b9;
             color: white;
             border-color: #2980b9;
         }
-        
-        .equipment-button.has-records {
-            font-weight: bold;
+
+        .equipment-button.has-records.active { 
+            background-color: #2980b9;
+            color: white;
+            border-color: #2980b9;
         }
 
+        .equipment-button.no-records {
+            background-color: #f5f5f5;
+            color: #95a5a6;
+            opacity: 0.8;
+        }
+        
         .equipment-button img {
             width: 30px;
             height: 30px;
+            object-fit: contain;
             margin-bottom: 5px;
         }
-
+        
         .equipment-button span {
-            font-size: 12px;
+            font-size: 11px;
+            font-weight: 600;
             text-align: center;
         }
         
-        .maintenance-card-scroller {
-            max-height: calc(100vh - 180px);
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-
         .maintenance-card {
-            background-color: #ffffff;
+            background-color: white;
             padding: 15px;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e0e0e0;
-            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
         }
 
-        .card-header-maint {
+        .card-header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
+            justify-content: flex-end;
+            font-size: 0.85rem;
+            font-weight: bold;
             color: #7f8c8d;
-            border-bottom: 1px solid #ecf0f1;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-        }
-        
-        .date {
-            font-weight: bold;
-            color: #2980b9;
         }
 
-        .manager {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1rem;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 8px;
+        .card-body {
+            margin-top: 10px;
+            flex-grow: 1;
         }
         
+        .manager {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
         .manager-icon {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
+            margin-right: 10px;
+            border-radius: 20px;
             border: 2px solid #3498db;
-            object-fit: cover;
         }
-        
+
         .content {
             font-size: 0.9rem;
-            color: #34495e;
+            color: #333;
             line-height: 1.5;
         }
 
-        /* 점검 신청 버튼 */
-        .apply-buttons-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        .btn-apply {
-            background-color: #2980b9;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: background-color 0.2s;
-            text-align: center;
-        }
-        .btn-apply:hover {
-            background-color: #21618c;
-        }
-        .btn-apply.emergency {
-            background-color: #c0392b;
-        }
-        .btn-apply.emergency:hover {
-            background-color: #a93226;
+        .menu {
+            display: flex;
+            justify-content: center;
+            padding: 8px 0;
+            background-color: white;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            border-top: 1px solid #ddd;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+            z-index: 10;
+            height: 75px;
         }
 
-        /* 모달 스타일 */
+        .menu-icon-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .menu-icon {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+
+        .menu-icon img {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+        }
+        
+        .menu-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .menu-icon span {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            color: white;
+            background-color: #e74c3c;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            font-size: 10px;
+            font-family: sans-serif;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .modal-backdrop {
             display: none;
             position: fixed;
@@ -308,7 +373,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.6);
-            z-index: 1050;
+            z-index: 1000;
         }
 
         .modal-container {
@@ -317,134 +382,174 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: #ffffff;
+            background-color: #fff;
             padding: 25px;
             border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-            z-index: 1051;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
             width: 90%;
             max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
+            color: #333;
+            border: 1px solid #ddd;
         }
-        
+
         .modal-close {
             position: absolute;
             top: 15px;
             right: 15px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #888;
+            font-size: 24px;
             cursor: pointer;
+            color: #95a5a6;
+            line-height: 1;
+        }
+        .modal-close:hover {
+            color: #333;
         }
         
         .modal-container h2 {
             text-align: center;
-            color: #2c3e50;
+            color: #34495e;
             margin-bottom: 20px;
         }
-
-        #calendar {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        textarea {
+        
+        .modal-container input, .modal-container textarea, .modal-container button {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #bdc3c7;
+            padding: 12px;
             border-radius: 4px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        
+        .modal-container textarea {
+            border: 1px solid #bdc3c7;
+            background-color: white;
             resize: vertical;
-            min-height: 100px;
+            min-height: 120px;
+            margin-bottom: 15px;
+        }
+        
+        .modal-container button {
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
         }
 
-        /* 반응형 디자인 */
-        @media (max-width: 1024px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-            .maintenance-card-scroller {
-                max-height: 50vh;
-            }
+        .modal-container button:hover {
+            background-color: #21618c;
         }
+        
+        #calendar, #emergencyCalendar {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        
+        .calendar-day-header {
+            font-weight: 600;
+            text-align: center;
+            font-size: 0.8rem;
+            padding: 8px 4px;
+        }
+
+        .calendar-day {
+            min-height: 35px;
+            padding: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .calendar-day:hover { background-color: #f0f0f0; }
+        .calendar-day.today { background-color: #e3f2fd; }
+        .calendar-day.selected { background-color: #2980b9; color: white; }
+        .calendar-day.other-month { color: #ccc; }
+        .day-number.saturday { color: blue; }
+        .day-number.holiday { color: red; }
+        
+        #selectedDate, #selectedEmergencyDate {
+            margin: 15px 0;
+            font-weight: bold;
+            text-align: center;
+            color: #34495e;
+        }
+
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <h1>MA집사</h1>
-            <div class="header-info">
-                 <div id="searchContainerInline" class="search-container-inline">
-                    <input type="text" id="searchInputInline" class="search-input-inline" placeholder="검색어 입력">
-                </div>
-                <img id="searchIcon" src="public/검색.png" alt="Search">
+    <div class="app-title">
+        <span>MA집사</span>
+        <div style="display: flex; align-items: center;">
+            <div id="searchContainerInline" class="search-container-inline">
+                <input type="text" id="searchInputInline" class="search-input-inline" placeholder="검색어를 입력하세요">
+                <button id="clearSearchBtn">초기화</button>
             </div>
+            <img id="searchIcon" src="public/검색.png" alt="Search Icon">
         </div>
     </div>
     
-    <div class="sub-header">
-        <div id="clientProjectHeader" class="client-info-container">
+    <div class="container">
+        <div class="sticky-top-panel">
+            <h1 id="clientHeader"></h1>
+
+            <div class="business-card-container-wrapper">
+                <div class="business-card-container" id="businessCards"></div>
             </div>
+    
+            <div id="equipmentTabsContainer">
+                <div id="equipmentTabs" class="scroll-container">
+                </div>
+            </div>
+        </div>
+
+        <div class="maintenance-card-wrapper">
+            <div class="maintenance-card-scroller" id="maintenanceCards"></div>
+        </div>
     </div>
 
-    <div class="container">
-        <div class="left-panel">
-            <div class="card">
-                <div class="card-header">사업 정보</div>
-                <div class="card-body">
-                    <ul id="businessCards" class="business-info-list">
-                        </ul>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">장비 선택</div>
-                <div class="card-body">
-                    <div id="equipmentTabs" class="equipment-scroll-container">
-                        </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">점검 신청</div>
-                <div class="card-body">
-                    <div id="menuIcons" class="apply-buttons-container">
-                        </div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="right-panel">
-            <div class="card">
-                 <div class="card-header">유지보수 기록</div>
-                 <div class="card-body">
-                    <div id="maintenanceCards" class="maintenance-card-scroller">
-                         </div>
-                 </div>
-            </div>
-        </div>
+    <div class="menu">
+        <div id="menuIcons"  class="menu-icon-container"></div>
     </div>
 
     <div id="modalBackdrop" class="modal-backdrop"></div>
-
     <div id="regularApplyContainer" class="modal-container">
         <span class="modal-close">&times;</span>
         <h2>정기 점검 신청</h2>
-        <div id="calendar" style="margin-bottom: 20px;"></div>
-        <div id="selectedDate" style="margin-bottom: 10px; font-weight: bold; color: #2980b9;"></div>
-        <textarea id="regularContent" placeholder="필요 점검 내역을 작성해주세요." style="width: 100%; height: 100px; margin-bottom: 20px;"></textarea>
-        <button id="regularApplyBtn" class="btn-apply" style="width:100%;">신청하기</button>
+        <div id="calendar"></div>
+        <div id="selectedDate">날짜를 선택해주세요</div>
+        <textarea id="regularContent" placeholder="필요 점검 내역을 작성해주세요."></textarea>
+        <button id="regularApplyBtn">신청하기</button>
     </div>
-
     <div id="emergencyApplyContainer" class="modal-container">
         <span class="modal-close">&times;</span>
         <h2>비상 점검 신청</h2>
-        <textarea id="emergencyContent" placeholder="긴급 점검이 필요한 내역을 상세히 작성해주세요." style="width: 100%; height: 150px; margin-bottom: 20px;"></textarea>
-        <button id="emergencyApplyBtn" class="btn-apply emergency" style="width:100%;">긴급 신청하기</button>
+        <div id="emergencyCalendarContainer" style="margin-bottom: 15px;">
+             <div style="text-align:center; font-weight: 600; margin-bottom:10px;">날짜 선택 (현재 ~ 7일)</div>
+             <div id="emergencyCalendar"></div>
+             <div id="selectedEmergencyDate">날짜를 선택해주세요</div>
+        </div>
+        <textarea id="emergencyContent" placeholder="필요 점검 내역을 작성해주세요."></textarea>
+        <button id="emergencyApplyBtn">신청하기</button>
     </div>
 
+
     <script>
+        // Javascript is unchanged
         document.addEventListener("DOMContentLoaded", async () => {
             const loggedClient = JSON.parse(localStorage.getItem("loggedClient"));
             if (!loggedClient) {
@@ -457,10 +562,11 @@
                 if (!response.ok) throw new Error("데이터를 가져오는 데 실패했습니다.");
                 const clientData = await response.json();
 
-                // 수정된 부분: 고객사 로고와 프로젝트명을 sub-header에 렌더링
-                document.getElementById("clientProjectHeader").innerHTML = `
-                    <img src="${clientData.business_info.logoPath}" alt="Logo" class="client-logo">
-                    <span class="project-name">${clientData.business_info.project_name}</span>
+                document.getElementById("clientHeader").innerHTML = `
+                 <div class="header-flex">
+                    <img src="${clientData.business_info.logoPath}" alt="Logo" class="header-logo">
+                    <span class="header-title">${clientData.business_info.project_name}</span>
+                </div>
                 `;
 
                 createBusinessCards(clientData.business_info);
@@ -469,34 +575,39 @@
             } catch (error) {
                 console.error("🚨 데이터 로드 중 오류 발생:", error);
             }
-            
-            // 메뉴 아이콘(신청 버튼) 설정
-            setupApplyButtons();
         });
 
         function createBusinessCards(businessInfo) {
             const container = document.getElementById("businessCards");
             container.innerHTML = "";
 
-            let businessPeriod = `${businessInfo.startDate || "N/A"} ~ ${businessInfo.endDate || "N/A"}`;
+            let startDate = businessInfo.startDate || "N/A";
+            let endDate = businessInfo.endDate || "N/A";
+            let businessPeriod = `${startDate} ~ ${endDate}`;
 
-            const infoOrder = ['delivered_equipment', 'sales_person', 'engineer', 'business_period'];
-            const infoData = {
-                ...businessInfo,
-                business_period: businessPeriod
-            };
+            Object.entries(businessInfo).forEach(([key, value]) => {
+                if (key === "project_name" || key === "startDate" || key === "endDate" || key === "logoPath") return;
+                
+                const card = document.createElement("div");
+                card.classList.add("business-card");
 
-            infoOrder.forEach(key => {
-                if (infoData[key]) {
-                     const li = document.createElement("li");
-                     li.classList.add("business-info-item");
-                     li.innerHTML = `
-                        <span class="info-title">${convertKeyToTitle(key)}</span>
-                        <span class="info-content">${infoData[key]}</span>
-                    `;
-                    container.appendChild(li);
-                }
+                card.innerHTML = `
+                    <div class="card-title">${convertKeyToTitle(key)}</div>
+                    <div class="card-content">${value}</div>
+                `;
+
+                container.appendChild(card);
             });
+
+            const periodCard = document.createElement("div");
+            periodCard.classList.add("business-card");
+
+            periodCard.innerHTML = `
+                <div class="card-title">사업 기간</div>
+                <div class="card-content">${businessPeriod}</div>
+            `;
+
+            container.appendChild(periodCard);
         }
 
         function convertKeyToTitle(key) {
@@ -505,9 +616,14 @@
                 delivered_equipment: "납품장비",
                 sales_person: "영업 담당자",
                 engineer: "엔지니어 담당자",
-                business_period: "사업 기간"
+                startDate: "사업 시작 기간",
+                endDate: "사업 종료 기간"
             };
             return titles[key] || key;
+        }
+
+        function setupMaintenanceCardScrolling() {
+            const container = document.getElementById("maintenanceCards");
         }
 
         async function loadMaintenanceData(clientId) {
@@ -517,49 +633,55 @@
                 const maintenanceData = await response.json();
 
                 const convertedData = {};
-                Object.entries(maintenanceData).forEach(([key, records]) => {
-                    convertedData[key] = {
-                        name: key,
-                        records: records
-                    };
-                });
-                
-                localStorage.setItem('maintenanceData', JSON.stringify(convertedData));
-
-                createEquipmentButtons(convertedData);
+                    Object.entries(maintenanceData).forEach(([key, records]) => {
+                        convertedData[key] = {
+                            name: key,
+                            records: records
+                        };
+                    });
+                    createEquipmentButtons(convertedData);
 
                 const firstEquipment = Object.keys(convertedData)[0];
                 if (firstEquipment) {
                     showMaintenanceInfo(firstEquipment, convertedData);
-                    const firstButton = document.querySelector('.equipment-button');
-                    if(firstButton) firstButton.classList.add('active');
                 }
             } catch (error) {
                 console.error("🚨 유지보수 데이터 로드 중 오류 발생:", error);
             }
         }
-        
+
         function createEquipmentButtons(maintenanceData) {
             const tabsContainer = document.getElementById("equipmentTabs");
             tabsContainer.innerHTML = "";
-
-            Object.entries(maintenanceData).forEach(([equipmentKey, equipmentData]) => {
-                if (!equipmentData || !equipmentData.name) return;
+       
+            Object.entries(maintenanceData).forEach(([equipmentKey, equipmentData], index) => {
+                if (!equipmentData || !equipmentData.name) {
+                    console.error(`⚠️ 장비 이름을 찾을 수 없음:`, equipmentKey, equipmentData);
+                    return;
+                }
         
-                const sanitizedName = equipmentData.name.replace(/\s+/g, "");
-                const imagePath = `/public/${sanitizedName}.png`;
+                const sanitizedName = equipmentData.name.replace(/\s+/g, ""); 
+                // const imagePath = `/public/${sanitizedName}.png`;
+                const imagePath = `/public/서버.png`;
                 const defaultImagePath = "/public/서버.png";
         
                 const button = document.createElement("button");
                 button.classList.add("equipment-button");
+                button.dataset.key = equipmentKey;
+                
+                if(index === 0) button.classList.add('active');
+
+
                 if (Array.isArray(equipmentData.records) && equipmentData.records.length > 0) {
-                    button.classList.add("has-records");
+                    button.classList.add("has-records"); 
+                } else {
+                    button.classList.add("no-records");
                 }
 
-                button.onclick = (event) => {
-                    document.querySelectorAll('.equipment-button').forEach(btn => btn.classList.remove('active'));
-                    event.currentTarget.classList.add('active');
-                    showMaintenanceInfo(equipmentKey, maintenanceData);
+                button.onclick = () => {
+                     document.querySelectorAll('.equipment-button').forEach(btn => btn.classList.remove('active'));
+                     button.classList.add('active');
+                     showMaintenanceInfo(equipmentKey, maintenanceData)
                 };
         
                 button.innerHTML = `
@@ -577,167 +699,311 @@
             
             const container = document.getElementById("maintenanceCards");
             container.innerHTML = "";
-            container.scrollTop = 0;
 
             data.records.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            data.records.forEach(entry => {
+            if (data.records.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color: #95a5a6; padding: 20px;">표시할 유지보수 기록이 없습니다.</p>`;
+                return;
+            }
+
+            data.records.forEach((entry,index) => {
                 const card = document.createElement("div");
                 card.classList.add("maintenance-card");
 
                 const sanitizedManager = entry.manager.replace(/\s+/g, "");
-                const imagePath = `/public/${sanitizedManager}.jpg`;
+                const imagePath = `/public/man.png`;
                 const defaultImagePath = "/public/man.png";
 
                 card.innerHTML = `
-                    <div class="card-header-maint">
-                        <span class="manager">
+                    <div class="card-header"><span class="date">${entry.date}</span></div>
+                    <div class="card-body">
+                        <div class="manager">
                             <img src="${imagePath}" class="manager-icon" onerror="this.onerror=null; this.src='${defaultImagePath}';">
                             ${entry.manager}
-                        </span>
-                        <span class="date">${entry.date}</span>
-                    </div>
-                    <div class="card-body-maint">
+                        </div>
                         <div class="content">${entry.content}</div>
                     </div>
                 `;
+
                 container.appendChild(card);
+            });
+
+            setupMaintenanceCardScrolling();
+        }
+
+        
+        function addMenuIcons(icons = []) {
+            const container = document.getElementById("menuIcons");
+            container.innerHTML = "";
+        
+            icons.forEach(iconConfig => {
+                const { id, label, onClick, customIconPath } = iconConfig;
+                
+                const iconWrapper = document.createElement("div");
+                iconWrapper.className = "menu-icon";
+                if(id) iconWrapper.id = id;
+                iconWrapper.style.position = 'relative';
+
+                iconWrapper.innerHTML = `
+                    <img src="${customIconPath}" alt="${label}">
+                    <span>${label}</span>
+                `;
+        
+                if (onClick) {
+                    iconWrapper.addEventListener("click", onClick);
+                }
+        
+                container.appendChild(iconWrapper);
             });
         }
         
-        function setupApplyButtons() {
-            const container = document.getElementById("menuIcons");
-            container.innerHTML = `
-                <button id="regularBtn" class="btn-apply">정기신청</button>
-                <button id="emergencyBtn" class="btn-apply emergency">비상신청</button>
-            `;
-
-            document.getElementById('regularBtn').addEventListener('click', () => {
+document.addEventListener("DOMContentLoaded", () => {
+    window.regularApplications = [];
+    window.emergencyApplications = [];
+    
+    addMenuIcons([
+        {
+            id:"regularIcon",
+            label: "정기신청", 
+            customIconPath: "public/정기신청.png", 
+            onClick: () => {
                 document.getElementById("modalBackdrop").style.display = "block";
                 document.getElementById("regularApplyContainer").style.display = "block";
                 initCalendar();
-            });
-            
-            document.getElementById('emergencyBtn').addEventListener('click', () => {
+            }
+        },
+        {
+            id:"emergencyIcon",
+            label: "비상신청", 
+            customIconPath: "public/비상신청.png", 
+            onClick: () => {
                 document.getElementById("modalBackdrop").style.display = "block";
                 document.getElementById("emergencyApplyContainer").style.display = "block";
-            });
-            
-            document.getElementById("modalBackdrop").addEventListener("click", closeModals);
-            document.querySelectorAll(".modal-close").forEach(button => {
-                button.addEventListener("click", closeModals);
-            });
+                initEmergencyCalendar();
+            }
+        },
+        {
+            label: "BI", 
+            customIconPath: "public/bi.png", 
+            onClick: () => { console.log("BI clicked"); }
         }
+    ]);
 
-        function closeModals() {
-            document.getElementById("modalBackdrop").style.display = "none";
-            document.getElementById("regularApplyContainer").style.display = "none";
-            document.getElementById("emergencyApplyContainer").style.display = "none";
+    document.getElementById("modalBackdrop").addEventListener("click", closeModals);
+    document.querySelectorAll(".modal-close").forEach(button => button.addEventListener("click", closeModals));
+
+    document.getElementById("regularApplyBtn").addEventListener("click", () => {
+        const selectedDates = document.getElementById("selectedDate").getAttribute("data-dates");
+        const content = document.getElementById("regularContent").value;
+        
+        if (selectedDates && JSON.parse(selectedDates).length > 0 && content.trim() !== "") {
+            addRegularApplication(JSON.parse(selectedDates), content);
+            alert("정기 점검이 신청되었습니다.");
+            closeModals();
+        } else {
+            alert("날짜와 내용을 모두 입력해주세요.");
         }
+    });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchIcon = document.getElementById('searchIcon');
-            const searchInputInline = document.getElementById('searchInputInline');
+    document.getElementById("emergencyApplyBtn").addEventListener("click", () => {
+        const content = document.getElementById("emergencyContent").value;
+        const selectedEmergencyDateEl = document.getElementById("selectedEmergencyDate");
+        const selectedDate = selectedEmergencyDateEl.dataset.date || new Date().toISOString().split('T')[0];
 
-            searchIcon.addEventListener('click', function(event) {
-                event.stopPropagation();
-                searchInputInline.classList.toggle('active');
-                if (searchInputInline.classList.contains('active')) {
-                    searchInputInline.focus();
-                } else {
-                     searchInputInline.value = '';
-                     resetMaintenanceDisplay();
-                }
-            });
+        if (content.trim() !== "") {
+            addEmergencyApplication(selectedDate, content);
+            alert("비상 점검이 신청되었습니다.");
+            closeModals();
+        } else {
+            alert("필요 점검 내역을 작성해주세요.");
+        }
+    });
+});
 
-            document.addEventListener('click', function(event) {
-                if (searchInputInline.classList.contains('active') && !event.target.closest('#searchContainerInline')) {
-                     searchInputInline.classList.remove('active');
-                     searchInputInline.value = '';
-                     resetMaintenanceDisplay();
-                }
-            });
+function updateRegularBadge() {
+    const regularIcon = document.getElementById("regularIcon");
+    if (!regularIcon) return;
+    
+    regularIcon.querySelector(".badge")?.remove();
 
-            searchInputInline.addEventListener('input', function(event) {
-                const searchTerm = event.target.value.toLowerCase().trim();
-                if (searchTerm) {
-                    const searchResults = searchMaintenanceData(searchTerm);
-                    renderFilteredMaintenanceData(searchResults);
-                } else {
-                    resetMaintenanceDisplay();
-                }
-            });
+    if(window.regularApplications.length === 0) return;
+
+    const allDates = window.regularApplications
+        .flatMap(app => app.dates)
+        .map(dateStr => new Date(dateStr.replace(/년|월/g, '/').replace(/일/, '').replace(/\s/g, '')))
+        .filter(d => !isNaN(d.getTime()));
+
+    if (allDates.length === 0) return;
+
+    const earliestDateObj = new Date(Math.min(...allDates));
+    const mm = String(earliestDateObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(earliestDateObj.getDate()).padStart(2, '0');
+
+    const badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = `${mm}/${dd}`;
+    regularIcon.appendChild(badge);
+}
+
+function updateEmergencyBadge() {
+    const emergencyIcon = document.getElementById("emergencyIcon");
+    if (!emergencyIcon) return;
+
+    emergencyIcon.querySelector(".badge")?.remove();
+    const count = window.emergencyApplications.length;
+
+    if (count > 0) {
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = count;
+      emergencyIcon.appendChild(badge);
+    }
+}
+
+function addRegularApplication(dates, content) {
+    if (window.regularApplications.length >= 10) window.regularApplications.shift();
+    window.regularApplications.push({ dates, content, timestamp: new Date().toISOString() });
+    updateRegularBadge();
+}
+
+function addEmergencyApplication(date, content) {
+    if (window.emergencyApplications.length >= 10) window.emergencyApplications.shift();
+    window.emergencyApplications.push({ date, content, timestamp: new Date().toISOString() });
+    updateEmergencyBadge();
+}
+
+function closeModals() {
+    document.getElementById("modalBackdrop").style.display = "none";
+    document.getElementById("regularApplyContainer").style.display = "none";
+    document.getElementById("emergencyApplyContainer").style.display = "none";
+}
+
+function initCalendar() {
+    const calendarEl = document.getElementById("calendar");
+    calendarEl.innerHTML = "";
+    
+    const now = new Date();
+    let currentYear = now.getFullYear();
+    let currentMonth = now.getMonth();
+    let selectedDates = [];
+
+    const selectedDateElement = document.getElementById("selectedDate");
+    selectedDateElement.setAttribute("data-dates", JSON.stringify([]));
+    selectedDateElement.textContent = "날짜를 선택해주세요";
+    
+    function renderCalendar() {
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
+      
+      let calendarHTML = `<h3>${currentYear}년 ${currentMonth + 1}월</h3><div class="calendar-grid">`;
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      days.forEach(d => calendarHTML += `<div class="calendar-day-header">${d}</div>`);
+      
+      for(let i=0; i < firstDay; i++) calendarHTML += `<div></div>`;
+      
+      for(let i=1; i <= lastDate; i++) {
+          const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+          let classes = 'calendar-day';
+          if(selectedDates.includes(dateString)) classes += ' selected';
+          calendarHTML += `<div class="${classes}" data-date="${dateString}">${i}</div>`;
+      }
+      calendarHTML += `</div>`;
+      calendarEl.innerHTML = calendarHTML;
+      
+      calendarEl.querySelectorAll('.calendar-day').forEach(day => {
+          day.addEventListener('click', (e) => {
+              const date = e.target.dataset.date;
+              if(!date) return;
+              const index = selectedDates.indexOf(date);
+              if(index > -1) {
+                  selectedDates.splice(index, 1);
+                  e.target.classList.remove('selected');
+              } else {
+                  selectedDates.push(date);
+                  e.target.classList.add('selected');
+              }
+              selectedDateElement.setAttribute("data-dates", JSON.stringify(selectedDates));
+              selectedDateElement.textContent = selectedDates.length > 0 ? `선택된 날짜: ${selectedDates.length}개` : "날짜를 선택해주세요";
+          });
+      });
+    }
+    
+    renderCalendar();
+}
+
+function initEmergencyCalendar() {
+    const calendar = document.getElementById("emergencyCalendar");
+    calendar.innerHTML = "";
+    const selectedDateElement = document.getElementById("selectedEmergencyDate");
+    const today = new Date();
+    
+    calendar.style.display = "grid";
+    calendar.style.gridTemplateColumns = "repeat(4, 1fr)";
+    calendar.style.gap = "5px";
+
+    for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(today.getDate() + i);
+        const dateString = date.toISOString().split('T')[0];
+        const dayElement = document.createElement("div");
+        dayElement.classList.add('calendar-day');
+        dayElement.textContent = date.getDate();
+        dayElement.dataset.date = dateString;
+        
+        dayElement.addEventListener('click', (e) => {
+            calendar.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+            e.target.classList.add('selected');
+            selectedDateElement.textContent = e.target.dataset.date;
+            selectedDateElement.dataset.date = e.target.dataset.date;
         });
 
-        function searchMaintenanceData(searchTerm) {
-            const results = [];
-            const maintenanceData = JSON.parse(localStorage.getItem('maintenanceData')) || {};
-            
-            Object.values(maintenanceData).forEach(equipmentData => {
-                if (equipmentData.records) {
-                    const matchingRecords = equipmentData.records.filter(record => 
-                        record.manager?.toLowerCase().includes(searchTerm) ||
-                        record.content?.toLowerCase().includes(searchTerm) ||
-                        record.date?.toLowerCase().includes(searchTerm)
-                    );
-                    
-                    if (matchingRecords.length > 0) {
-                        results.push(...matchingRecords);
-                    }
-                }
-            });
-            return results.sort((a, b) => new Date(b.date) - new Date(a.date));
+        calendar.appendChild(dayElement);
+    }
+    
+    const firstDay = calendar.firstChild;
+    firstDay.classList.add('selected');
+    selectedDateElement.textContent = firstDay.dataset.date;
+    selectedDateElement.dataset.date = firstDay.dataset.date;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchIcon = document.getElementById('searchIcon');
+    const searchContainerInline = document.getElementById('searchContainerInline');
+    const searchInputInline = document.getElementById('searchInputInline');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    
+    searchIcon.addEventListener('click', function(event) {
+        event.stopPropagation();
+        searchContainerInline.style.display = 'flex';
+        setTimeout(() => {
+            searchInputInline.classList.add('active');
+            searchInputInline.focus();
+        }, 10);
+    });
+    
+    clearSearchBtn.addEventListener('click', function() {
+        searchInputInline.value = '';
+        resetMaintenanceDisplay();
+        clearSearchBtn.style.display = 'none';
+    });
+    
+    searchInputInline.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        if (searchTerm) {
+            const searchResults = searchMaintenanceData(searchTerm);
+            renderFilteredMaintenanceData(searchResults);
+            clearSearchBtn.style.display = 'block';
+        } else {
+            resetMaintenanceDisplay();
+            clearSearchBtn.style.display = 'none';
         }
+    });
 
-        function renderFilteredMaintenanceData(results) {
-            const container = document.getElementById('maintenanceCards');
-            container.innerHTML = '';
-            document.querySelectorAll('.equipment-button').forEach(btn => btn.classList.remove('active'));
-
-            if (results.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding: 20px;">검색 결과가 없습니다.</div>';
-                return;
-            }
-
-            results.forEach(record => {
-                 const card = document.createElement("div");
-                card.classList.add("maintenance-card");
-
-                const sanitizedManager = record.manager.replace(/\s+/g, "");
-                const imagePath = `/public/${sanitizedManager}.jpg`;
-                const defaultImagePath = "/public/man.png";
-
-                card.innerHTML = `
-                    <div class="card-header-maint">
-                        <span class="manager">
-                            <img src="${imagePath}" class="manager-icon" onerror="this.onerror=null; this.src='${defaultImagePath}';">
-                            ${record.manager}
-                        </span>
-                        <span class="date">${record.date}</span>
-                    </div>
-                    <div class="card-body-maint">
-                        <div class="content">${record.content}</div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function resetMaintenanceDisplay() {
-            const maintenanceData = JSON.parse(localStorage.getItem('maintenanceData')) || {};
-            const firstEquipment = Object.keys(maintenanceData)[0];
-            if (!firstEquipment) return;
-            showMaintenanceInfo(firstEquipment, maintenanceData);
-
-            document.querySelectorAll('.equipment-button').forEach(btn => btn.classList.remove('active'));
-            const firstButton = document.querySelector('.equipment-button');
-            if(firstButton) firstButton.classList.add('active');
-        }
-
-        function initCalendar() {
-            const calendar = document.getElementById("calendar");
-            calendar.innerHTML = "달력 UI가 여기에 표시됩니다. (구현 필요)";
-        }
+    function searchMaintenanceData(searchTerm) { return []; }
+    function renderFilteredMaintenanceData(results) { }
+    function resetMaintenanceDisplay() { }
+});
     </script>
 </body>
 </html>

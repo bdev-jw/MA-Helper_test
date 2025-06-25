@@ -100,14 +100,14 @@
         .card-header {
             background-color: #34495e;
             color: white;
-            padding: 15px 20px;
+            padding: 10px 15px;
             font-weight: 600;
             font-size: 1.1rem;
             border-radius: 8px 8px 0 0;
         }
 
         .card-body {
-            padding: 20px;
+            padding: 10px;
         }
 
         .form-group {
@@ -180,7 +180,7 @@
         .calendar-header {
             background-color: #34495e;
             color: white;
-            padding: 15px 20px;
+            padding: 10px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -311,7 +311,7 @@
         }
 
         .work-list {
-            max-height: 400px;
+            max-height: 195px;
             overflow-y: auto;
         }
 
@@ -367,7 +367,7 @@
             background: white;
             border: 1px solid #ddd;
             border-radius: 6px;
-            padding: 15px;
+            padding: 8px;
             text-align: center;
         }
 
@@ -413,21 +413,6 @@
             border-radius: 4px;
             margin-bottom: 15px;
             border: 1px solid #c8e6c9;
-        }
-
-        @media (max-width: 1024px) {
-            .container {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
         }
 
         .card.no-data-card {
@@ -479,6 +464,65 @@
             filter: brightness(0) invert(1); /* 아이콘을 흰색으로 변경 */
             transition: opacity 0.3s;
         }
+
+        @media (max-width: 768px) {
+            body {
+                overflow-x: hidden;
+            }
+
+            .header-content {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: nowrap;
+                gap: 6px;
+                overflow-x: auto;
+                white-space: nowrap;
+                padding: 0 10px;
+            }
+
+            .header h1 {
+                font-size: 1.1rem;
+                margin: 0;
+                flex-shrink: 0;
+            }
+
+            .header-info {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-shrink: 0;
+            }
+
+            .search-container-inline {
+                margin: 0;
+            }
+
+            #searchIcon {
+                width: 20px;
+                height: 20px;
+            }
+
+            .user-info,
+            .header-info > div,
+            .logout-btn {
+                font-size: 0.75rem;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .logout-btn {
+                padding: 6px 10px;
+            }
+
+            .container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 10px;
+                overflow-x: hidden;
+            }
+            }
 
     </style>
 </head>
