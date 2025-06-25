@@ -54,20 +54,6 @@
             border-radius: 4px;
         }
 
-        .logout-btn {
-            background: #e74c3c;
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .logout-btn:hover {
-            background: #c0392b;
-        }
-
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -466,8 +452,10 @@
         }
 
         @media (max-width: 768px) {
-            body {
-                overflow-x: hidden;
+            .header {
+                position: sticky;
+                top:0;
+                z-index: 1000;
             }
 
             .header-content {
@@ -505,15 +493,10 @@
             }
 
             .user-info,
-            .header-info > div,
-            .logout-btn {
+            .header-info > div{
                 font-size: 0.75rem;
                 white-space: nowrap;
                 flex-shrink: 0;
-            }
-
-            .logout-btn {
-                padding: 6px 10px;
             }
 
             .container {
@@ -539,7 +522,6 @@
                     <span id="currentUser"></span>
                 </div>
                 <div>오늘: <span id="currentDate"></span></div>
-                <button class="logout-btn" onclick="logout()">로그아웃</button>
             </div>
         </div>
     </div>
@@ -670,13 +652,6 @@
 
             // 검색 이벤트 리스너 호출 추가
             setupSearchEventListeners();
-        }
-
-        // 로그아웃 함수
-        function logout() {
-            localStorage.removeItem('loggedEngineer');
-            localStorage.removeItem('loggedClient');
-            window.location.href = 'index.html';
         }
 
         // 인증 확인
