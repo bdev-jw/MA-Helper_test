@@ -35,6 +35,12 @@
             align-items: center;
         }
 
+        .logo-title-group { /* 새로 만든 그룹에 Flexbox 적용! */
+            display: flex;
+            align-items: center; /* 로고랑 h1도 세로 중앙 정렬! */
+            gap: 10px; /* 로고랑 h1 사이 간격을 10px로 줄여줘! */
+        }
+
         .header h1 {
             font-size: 1.8rem;
             font-weight: 600;
@@ -46,6 +52,12 @@
             display: flex;
             align-items: center;
             gap: 15px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .user-info {
@@ -512,7 +524,12 @@
 <body>
     <div class="header">
         <div class="header-content">
+            <div class="logo-title-group">
+                <div class="logo">
+                    <img src="public/logo.png" alt="로고" style="height: 40px; width: auto;">
+            </div>
             <h1>MA집사</h1>
+            </div>
             <div class="header-info">
                 <div id="searchContainerInline" class="search-container-inline">
                     <input type="text" id="searchInputInline" class="search-input-inline" placeholder="기록 검색">

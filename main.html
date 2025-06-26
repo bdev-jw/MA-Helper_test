@@ -47,6 +47,11 @@
             height: var(--header-height); /* 1. 변수 사용 */
         }
 
+        .logo {
+            height: 40px;
+            width: auto;
+        }
+
         .sticky-top-panel {
             position: sticky;
             top: var(--header-height); /* 1. 변수 사용 */
@@ -493,7 +498,10 @@
 </head>
 <body>
     <div class="app-title">
-        <span>MA집사</span>
+        <div class="header-flex">
+            <img src="public/logo.png" alt="MA집사 Logo" class="logo">
+            <span>MA집사</span>
+        </div>
         <div style="display: flex; align-items: center;">
             <div id="searchContainerInline" class="search-container-inline">
                 <input type="text" id="searchInputInline" class="search-input-inline" placeholder="검색어를 입력하세요">
