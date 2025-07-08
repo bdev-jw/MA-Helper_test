@@ -447,6 +447,44 @@ app.get('/api/engineer-records/:engineerId', async (req, res) => {
     }
 });
 
+// ✅ 업무 기록 수정 라우트 (엔지니어 기록 수정용 PATCH)
+app.patch('/api/engineer-record/:recordId', async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    const { date, content } = req.body;
+
+    const [clientId, equipment, originalDate] = recordId.split('_');
+    if (!clientId || !equipment || !originalDate) {
+      return res.status(400).json({ message: 'recordId 형식이 잘못되었습니다.' });
+    }
+
+    const client = await Client.findOne({ id: clientId });
+    if (!client || !client.maintenance_data || !client.maintenance_data[equipment]) {
+      return res.status(404).json({ message: '해당 기록을 찾을 수 없습니다.' });
+    }
+
+    const records = client.maintenance_data[equipment];
+    const record = records.find(r => r.date === originalDate);
+
+    if (!record) {
+      return res.status(404).json({ message: '해당 날짜의 기록이 없습니다.' });
+    }
+
+    // 수정
+    record.date = date;
+    record.content = content;
+
+    // 변경 감지 및 저장
+    client.markModified(`maintenance_data.${equipment}`);
+    await client.save();
+
+    res.json({ message: '업무 기록이 성공적으로 수정되었습니다.', updatedRecord: record });
+  } catch (error) {
+    console.error('업무 기록 수정 오류:', error);
+    res.status(500).json({ message: '서버 오류', error: error.message });
+  }
+});
+
 // ✅ 404 에러 처리
 app.use((req, res) => {
     console.log(`❌ 404 - 경로를 찾을 수 없음: ${req.method} ${req.path}`);
