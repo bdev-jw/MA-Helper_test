@@ -783,7 +783,7 @@
             if (engineerData) {
                 currentUser = JSON.parse(engineerData);
                 isEngineer = true;
-                document.getElementById('currentUser').textContent = `엔지니어: ${currentUser.name}`;
+                document.getElementById('currentUser').textContent = `${currentUser.role === 'reader' ? '팀장' : '엔지니어'}: ${currentUser.name}`;
                 return;
             }
 

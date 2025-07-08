@@ -13,7 +13,9 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:5500',
   'http://localhost:5500',
-  'https://ma-helper-test.netlify.app'
+  'https://ma-helper-test.netlify.app',
+  'http://127.0.0.1:5502',    // ← 이 줄 추가
+  'http://localhost:5502'    // ← 이 줄도 추가
 ];
 
 app.use(cors({
@@ -31,18 +33,18 @@ app.use(cors({
 
 app.options('*', cors());
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-  res.header('Access-Control-Allow-Credentials', 'true');
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*');
+//   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+//   res.header('Access-Control-Allow-Credentials', 'true');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+//   if (req.method === 'OPTIONS') {
+//     return res.status(200).end();
+//   }
 
-  next();
-});
+//   next();
+// });
 
 app.use(express.json());
 
@@ -67,6 +69,7 @@ const EngineerSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   password: String,
   name: String,
+  role: { type: String, required: true, enum: ['leader', 'member'] }, // 👈 역할 필드 추가
   gender: String,
   position: String,
   experience: String,
@@ -237,6 +240,7 @@ app.post('/api/engineer-login', async(req, res) => {
       res.json({
         id: engineer.id,
         name: engineer.name,
+        role: engineer.role,
         assignments: engineer.assignments || []
       });
     } else {
@@ -309,7 +313,8 @@ app.post('/api/engineer-record', async (req, res) => {
             date,
             cycle: "비정기",
             content,
-            manager
+            manager,
+            status: 'pending'
         };
 
         clientDoc.maintenance_data[equipmentKey].push(newRecord);
@@ -426,7 +431,8 @@ app.get('/api/engineer-records/:engineerId', async (req, res) => {
                                     equipment: equipment,
                                     date: record.date,
                                     performer: record.manager,
-                                    content: record.content
+                                    content: record.content,
+                                    status: record.status || 'approved'
                                 });
                             }
                         });
@@ -481,6 +487,87 @@ app.patch('/api/engineer-record/:recordId', async (req, res) => {
     res.json({ message: '업무 기록이 성공적으로 수정되었습니다.', updatedRecord: record });
   } catch (error) {
     console.error('업무 기록 수정 오류:', error);
+    res.status(500).json({ message: '서버 오류', error: error.message });
+  }
+});
+
+// server.js (다른 라우트들과 함께 있는 곳에 추가)
+
+// 📢 [신규] 팀장용 - 승인 대기 기록 조회 API
+app.get('/api/team-records/pending', async (req, res) => {
+  try {
+    const clients = await Client.find({});
+    const pendingRecords = [];
+    
+    clients.forEach(client => {
+      if (client.maintenance_data) {
+        Object.keys(client.maintenance_data).forEach(equipment => {
+          const records = client.maintenance_data[equipment];
+          if (Array.isArray(records)) {
+            records.forEach(record => {
+              if (record.status === 'pending') {
+                pendingRecords.push({
+                  id: `${client.id}_${equipment}_${record.date}`, // 고유 ID 생성
+                  project: client.business_info?.project_name || equipment,
+                  client: client.client_name,
+                  equipment: equipment,
+                  date: record.date,
+                  performer: record.manager,
+                  content: record.content,
+                  status: record.status
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+
+    // 최신순으로 정렬
+    pendingRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+    res.json(pendingRecords);
+
+  } catch (error) {
+    console.error('승인 대기 기록 조회 오류:', error);
+    res.status(500).json({ message: '서버 오류', error: error.message });
+  }
+});
+
+
+// 📢 [신규] 팀장용 - 업무 기록 상태 변경 API (승인/반려)
+app.patch('/api/record/status/:recordId', async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    const { status } = req.body; // 'approved' 또는 'rejected'
+
+    if (!['approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: '잘못된 상태 값입니다.' });
+    }
+
+    const [clientId, equipment, originalDate] = recordId.split('_');
+
+    const client = await Client.findOne({ id: clientId });
+    if (!client || !client.maintenance_data || !client.maintenance_data[equipment]) {
+      return res.status(404).json({ message: '해당 기록을 찾을 수 없습니다.' });
+    }
+
+    const record = client.maintenance_data[equipment].find(r => r.date === originalDate && r.status === 'pending');
+
+    if (!record) {
+      return res.status(404).json({ message: '해당 대기 상태의 기록이 없습니다.' });
+    }
+
+    // 상태 수정
+    record.status = status;
+
+    // 변경 감지 및 저장
+    client.markModified(`maintenance_data.${equipment}`);
+    await client.save();
+
+    res.json({ message: `업무 기록이 ${status} 상태로 변경되었습니다.`, updatedRecord: record });
+
+  } catch (error) {
+    console.error('업무 기록 상태 변경 오류:', error);
     res.status(500).json({ message: '서버 오류', error: error.message });
   }
 });
