@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -316,6 +315,11 @@
         .work-item {
             border-bottom: 1px solid #ecf0f1;
             padding: 12px 0;
+            cursor: pointer; /* 수정 가능하도록 커서 변경 */
+            transition: background-color 0.2s;
+        }
+        .work-item:hover {
+            background-color: #f8f9fa; /* 마우스 오버 효과 */
         }
 
         .work-item:last-child {
@@ -462,6 +466,84 @@
             filter: brightness(0) invert(1); /* 아이콘을 흰색으로 변경 */
             transition: opacity 0.3s;
         }
+        
+        /* --- 수정 기능용 모달 스타일 시작 --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            transform: translateY(-50px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.visible .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.4rem;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-footer .btn {
+            width: auto;
+        }
+        .modal-footer .btn-secondary {
+            background-color: #95a5a6;
+        }
+        .modal-footer .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        /* --- 수정 기능용 모달 스타일 끝 --- */
+
 
         @media (max-width: 768px) {
             .header {
@@ -548,10 +630,8 @@
             <div class="card">
                 <div class="card-header">업무 기록 등록</div>
                 <div class="card-body">
-                    <!-- 메시지 표시 영역 추가 -->
                     <div id="formMessage"></div>
                     
-                    <!-- 고객사, 프로젝트, 장비 -->
                     <div class="form-group">
                         <label for="clientSelect">고객사 선택 *</label>
                         <select id="clientSelect">
@@ -587,7 +667,6 @@
                 </div>
             </div>
 
-            <!-- 여기에 기능 추가 박스 -->
             <div class="card no-data-card">
                 <div class="card-body">
                     <div class="no-data">🔧 AI 기능 추가 준비중</div>
@@ -640,6 +719,33 @@
             </div>
         </div>
     </div>
+
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>업무 기록 수정</h2>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="editFormMessage"></div>
+                <input type="hidden" id="editRecordId">
+                <div class="form-group">
+                    <label for="editWorkDate">수행일자 *</label>
+                    <input type="date" id="editWorkDate">
+                </div>
+                <div class="form-group">
+                    <label for="editWorkContent">업무 내용 *</label>
+                    <textarea id="editWorkContent" style="min-height: 150px;"></textarea>
+                </div>
+                <p style="font-size: 0.8rem; color: #7f8c8d;">* 고객사, 프로젝트, 장비 정보는 수정할 수 없습니다.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">취소</button>
+                <button class="btn" id="updateBtn" onclick="updateWork()">수정 완료</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // 전역 변수
@@ -728,7 +834,7 @@
                 updateStats();
             } catch (error) {
                 console.error('초기 데이터 로드 실패:', error);
-                showMessage('데이터 로드 중 오류가 발생했습니다.', 'error');
+                showMessage('데이터 로드 중 오류가 발생했습니다.', 'error', 'formMessage');
             }
         }
 
@@ -755,7 +861,7 @@
                 }
             } catch (error) {
                 console.error('엔지니어 데이터 로드 실패:', error);
-                showMessage(error.message, 'error');
+                showMessage(error.message, 'error', 'formMessage');
             }
         }
 
@@ -789,7 +895,7 @@
             // 검색 결과는 최신순으로 정렬하여 상위 8개만 표시
             const sortedRecords = records.sort((a, b) => new Date(b.date) - new Date(a.date));
             workList.innerHTML = sortedRecords.slice(0, 8).map(work => `
-                <div class="work-item">
+                <div class="work-item" onclick="editWork(${work.id})">
                     <div class="work-header">
                         <div class="project-name">${work.project}</div>
                         <div class="work-date">${formatDate(work.date)}</div>
@@ -890,12 +996,15 @@
         // 모든 업무 기록 로드
         async function loadWorkRecords() {
             try {
-                const response = await fetch(`${API_BASE}/engineer-records/${currentUser.id}`);
+                // API 호출 시 응답이 느릴 경우를 대비해 캐시 방지용 파라미터 추가
+                const response = await fetch(`${API_BASE}/engineer-records/${currentUser.id}?_=${new Date().getTime()}`);
                 if (!response.ok) {
                     throw new Error('업무 기록을 불러올 수 없습니다.');
                 }
                 
                 workRecords = await response.json();
+                // 최신순으로 정렬
+                workRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
                 updateWorkList();
             } catch (error) {
                 console.error('업무 기록 로드 실패:', error);
@@ -914,7 +1023,7 @@
             const content = document.getElementById('workContent').value;
 
             if (!client || !project || !equipment || !date || !performer || !content) {
-                showMessage('모든 필수 항목을 입력해주세요.', 'error');
+                showMessage('모든 필수 항목을 입력해주세요.', 'error', 'formMessage');
                 return;
             }
 
@@ -936,33 +1045,117 @@
                             content: content
                         })
                     });
-
+                    const newRecord = await response.json(); // 서버로부터 새로 생성된 기록 받기
                     if (response.ok) {
-                        showMessage('업무 기록이 저장되었습니다.', 'success');
+                        showMessage('업무 기록이 저장되었습니다.', 'success', 'formMessage');
                         clearForm();
-                        const newWork = {
-                            id: Date.now(), project, client, date, performer, content
-                        };
-                        workRecords.unshift(newWork);
+                        
+                        // 서버에서 받은 최신 데이터로 workRecords 업데이트
+                        workRecords.unshift(newRecord);
                         
                         updateWorkList();
                         updateCalendar();
                         updateStats();
                     } else {
-                        const errorData = await response.json();
-                        showMessage(`저장 실패: ${errorData.message}`, 'error');
+                        showMessage(`저장 실패: ${newRecord.message}`, 'error', 'formMessage');
                     }
                 } else {
-                   showMessage('고객사는 기록을 추가할 수 없습니다.', 'error');
+                   showMessage('고객사는 기록을 추가할 수 없습니다.', 'error', 'formMessage');
                 }
             } catch (error) {
                 console.error('업무 저장 오류:', error);
-                showMessage('서버 연결에 실패했습니다.', 'error');
+                showMessage('서버 연결에 실패했습니다.', 'error', 'formMessage');
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.textContent = '업무 기록 저장';
             }
         }
+        
+        // --- 업무 기록 수정 함수들 (신규 추가) ---
+        
+        // 수정 모달 열기
+        function editWork(recordId) {
+            const record = workRecords.find(w => w.id == recordId);
+            if (!record) {
+                alert('수정할 기록을 찾을 수 없습니다.');
+                return;
+            }
+            
+            document.getElementById('editRecordId').value = record.id;
+            document.getElementById('editWorkDate').value = record.date;
+            document.getElementById('editWorkContent').value = record.content;
+            
+            document.getElementById('editModal').classList.add('visible');
+        }
+
+        // 수정 모달 닫기
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('visible');
+            // 메시지 초기화
+            const messageDiv = document.getElementById('editFormMessage');
+            messageDiv.textContent = '';
+            messageDiv.className = '';
+        }
+        
+        // 업무 기록 업데이트
+        async function updateWork() {
+            const recordId = document.getElementById('editRecordId').value;
+            const date = document.getElementById('editWorkDate').value;
+            const content = document.getElementById('editWorkContent').value;
+
+            if (!date || !content) {
+                showMessage('날짜와 업무 내용을 모두 입력해주세요.', 'error', 'editFormMessage');
+                return;
+            }
+            
+            const updateBtn = document.getElementById('updateBtn');
+            updateBtn.disabled = true;
+            updateBtn.textContent = '수정 중...';
+
+            try {
+                // 서버에 업데이트 요청 (PATCH 메소드 사용)
+                const response = await fetch(`${API_BASE}/engineer-record/${recordId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        date: date,
+                        content: content
+                    })
+                });
+
+                if (response.ok) {
+                    showMessage('업무 기록이 수정되었습니다.', 'success', 'editFormMessage');
+                    
+                    // 로컬 데이터 업데이트
+                    const recordIndex = workRecords.findIndex(w => w.id == recordId);
+                    if (recordIndex > -1) {
+                        workRecords[recordIndex].date = date;
+                        workRecords[recordIndex].content = content;
+                    }
+
+                    // 1.5초 후에 모달 닫고 UI 갱신
+                    setTimeout(() => {
+                        closeEditModal();
+                        updateWorkList();
+                        updateCalendar();
+                        updateStats();
+                    }, 1500);
+
+                } else {
+                    const errorData = await response.json();
+                    showMessage(`수정 실패: ${errorData.message}`, 'error', 'editFormMessage');
+                }
+            } catch (error) {
+                console.error('업무 수정 오류:', error);
+                showMessage('서버 연결에 실패했습니다.', 'error', 'editFormMessage');
+            } finally {
+                updateBtn.disabled = false;
+                updateBtn.textContent = '수정 완료';
+            }
+        }
+
+        // --- 여기까지 수정 함수들 ---
+
 
         // 폼 초기화
         function clearForm() {
@@ -976,8 +1169,8 @@
         }
 
         // 메시지 표시 (수정됨)
-        function showMessage(message, type) {
-            const messageDiv = document.getElementById('formMessage');
+        function showMessage(message, type, elementId) {
+            const messageDiv = document.getElementById(elementId);
             if (messageDiv) {
                 messageDiv.className = type;
                 messageDiv.textContent = message;
@@ -996,20 +1189,19 @@
         function updateWorkList() {
             const workList = document.getElementById('workList');
 
-            // '기타' 고객사 제외한 업무 기록만 필터링 (더 엄격한 조건)
+            // '기타' 고객사 제외한 업무 기록만 필터링
             const filteredRecords = workRecords.filter(work => {
                 return work.client && work.client.trim() !== '기타';
             });
             
-            console.log('전체 기록 수:', workRecords.length);
-            console.log('필터링된 기록 수:', filteredRecords.length);
-
             if (filteredRecords.length === 0) {
                 workList.innerHTML = '<div class="no-data">등록된 업무 기록이 없습니다.</div>';
                 return;
             }
+            
+            // 최신 8개 기록만 표시하도록 슬라이싱
             workList.innerHTML = filteredRecords.slice(0, 8).map(work => `
-                <div class="work-item">
+                <div class="work-item" onclick="editWork('${work.id}')">
                     <div class="work-header">
                         <div class="project-name">${work.project}</div>
                         <div class="work-date">${formatDate(work.date)}</div>
@@ -1031,20 +1223,20 @@
         }
 
         // 전역 변수
-let selectedDateString = ''; // Date 객체 대신 문자열 저장
+        let selectedDateString = ''; // Date 객체 대신 문자열 저장
 
-function selectDate(dateString) {
-    // 1. 수행일자 입력란에 날짜 설정
-    document.getElementById('workDate').value = dateString;
+        function selectDate(dateString) {
+            // 1. 수행일자 입력란에 날짜 설정
+            document.getElementById('workDate').value = dateString;
 
-    // 2. 선택한 날짜 문자열 저장
-    selectedDateString = dateString;
+            // 2. 선택한 날짜 문자열 저장
+            selectedDateString = dateString;
 
-    // 3. 달력 다시 그림 (선택 강조 포함)
-    updateCalendar();
-}
+            // 3. 달력 다시 그림 (선택 강조 포함)
+            updateCalendar();
+        }
 
-// 2025년 대한민국 공휴일 정보 (월별로 날짜만 포함)
+        // 2025년 대한민국 공휴일 정보 (월별로 날짜만 포함)
         function getKoreanHolidays(year, month) {
             if (year !== 2025) return []; // 2025년만 지원
 
@@ -1061,8 +1253,8 @@ function selectDate(dateString) {
         }
 
 
-function updateCalendar() {
-    const calendar = document.getElementById('calendar');
+        function updateCalendar() {
+            const calendar = document.getElementById('calendar');
             const calendarTitle = document.getElementById('calendarTitle');
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
@@ -1142,16 +1334,16 @@ function updateCalendar() {
         }
         function goToToday() {
             const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const todayStr = `${yyyy}-${mm}-${dd}`;
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
 
-    currentDate = new Date(today); // 현재 달력을 오늘로
-    selectedDateString = todayStr;
-    document.getElementById('workDate').value = todayStr;
+            currentDate = new Date(today); // 현재 달력을 오늘로
+            selectedDateString = todayStr;
+            document.getElementById('workDate').value = todayStr;
 
-    updateCalendar();
+            updateCalendar();
         }
 
         // updateStats 함수 전체 수정
