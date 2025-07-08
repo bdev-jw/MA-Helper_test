@@ -13,7 +13,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:5500',
   'http://localhost:5500',
-  'https://ma-helper-test.netlify.app'
+  'https://ma-helper-test-1.netlify.app'
 ];
 
 app.use(cors({
