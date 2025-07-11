@@ -1,3 +1,7 @@
+// status: '대기' | '승인' | '반려',
+// reviewedBy: '김팀장',
+// reviewedAt: '2025-07-08'
+
 const clients = {
     test1:{
         id:'test1@mesa.kr',
@@ -21,63 +25,57 @@ const clients = {
                     cycle: '발생시',
                     content: 'TS4500 I/0 Slot 장애처리',
                     manager: '강영구',
-                    status: 'approved'
+                    status: '대기',
+                    reviewedBy: null,
+                    reviewedAt: null
                 },
                 {
                     date: '2025-01-16',
                     cycle: '발생시',
                     content: 'Tfinity , TS4500 마이그레이션',
-                    manager: '강영구',
-                    status: 'approved'
+                    manager: '강영구'
                 },
                 {
                     date: '2025-01-21',
                     cycle: '발생시',
                     content: '장애 처리 및 테스트',
-                    manager: '김두현',
-                    status: 'approved'
+                    manager: '김두현'
                 },
                 {
                     date: '2025-01-21',
                     cycle: '발생시',
                     content: '장애 처리',
-                    manager: '황인성',
-                    status: 'approved'
+                    manager: '황인성'
                 },
                 {
                     date: '2025-01-21',
                     cycle: '발생시',
                     content: 'TS4500 I/0 Slot 장애처리',
-                    manager: '한형구',
-                    status: 'approved'
+                    manager: '한형구'
                 },
                 {
                     date: '2025-01-21',
                     cycle: '발생시',
                     content: 'TS4500 I/0 Slot 장애처리',
-                    manager: '강영구',
-                    status: 'approved'
+                    manager: '강영구'
                 },
                 {
                     date: '2025-01-21',
                     cycle: '발생시',
                     content: 'TS4500 I/0 Slot 장애처리',
-                    manager: '강영구',
-                    status: 'approved'
+                    manager: '강영구'
                 },
                 {
                     date: '2025-01-21',
                     cycle: '발생시',
                     content: 'TS4500 I/0 Slot 장애처리',
-                    manager: '강영구',
-                    status: 'approved'
+                    manager: '강영구'
                 },
                 {
                     date: '2025-01-21',
                     cycle: '발생시',
                     content: 'TS4500 I/0 Slot 장애처리',
-                    manager: '강영구',
-                    status: 'approved'
+                    manager: '강영구'
                 }
             ]
         },
@@ -203,8 +201,7 @@ const clients = {
                         date: '2025-03-24',
                         cycle: '발생시',
                         content: 'NBUA 5250 설치 지원',
-                        manager: '강영구',
-                        status: 'approved'
+                        manager: '강영구'
                     },
                     {
                         date: '2025-03-24',
@@ -307,11 +304,12 @@ const engineers = [
       id: "dhkim@mesa.kr",
       password:'123',
       name: "김두현",
-      role:"leader",
       gender: "남",
       position: "차장",
       experience: "4년차",
       photo: "/public/man.png",
+      role:'member',
+      team: '1팀',
       assignments: [
         {
           client: "(주)에스비에스(SBS)",
@@ -342,11 +340,12 @@ const engineers = [
       id: "jwlee@mesa.kr",
       password:'123',
       name: "이준원",
-      role: "member",
       gender: "남",
       position: "과장",
       experience: "6년차",
       photo: "/public/profile_hjy.jpg",
+      role:'reader',
+      team: '1팀',
       assignments: [
         {
           client: "MBC",
