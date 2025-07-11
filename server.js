@@ -74,6 +74,7 @@ const EngineerSchema = new mongoose.Schema({
   position: String,
   experience: String,
   photo: String,
+  team: String, // 👈 팀 정보 추가
   assignments: Array
 });
 const Engineer = mongoose.model('Engineer', EngineerSchema);
