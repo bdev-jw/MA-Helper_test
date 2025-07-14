@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>업무 수행 기록 시스템</title>
     <style>
+        /* ... 기존 스타일 코드는 변경 없이 그대로 유지 ... */
         * {
             margin: 0;
             padding: 0;
@@ -106,6 +107,65 @@
         .card-body {
             padding: 10px;
         }
+        
+        /* AI 카드 특별 스타일 */
+        #aiCardBody {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 300px; /* 고정 높이 지정 */
+        }
+
+        .chat-window {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-message {
+            padding: 8px 12px;
+            border-radius: 18px;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+
+        .ai-message {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .user-message {
+            background-color: #3498db;
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+
+        .chat-input-container {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            gap: 10px;
+        }
+
+        #chatInput {
+            flex-grow: 1;
+            border-radius: 20px;
+        }
+
+        #sendChatBtn {
+            width: auto;
+            border-radius: 20px;
+            padding: 10px 20px;
+        }
+        /* --- 챗봇 UI 스타일 끝 --- */
+
 
         .form-group {
             margin-bottom: 15px;
@@ -718,7 +778,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="workContent">업무 내용 *</label>
+                        <label for="workContent_simple">업무 요약 *</label>
+                        <input id="workContent_simple" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workContent">상세 내용 *</label>
                         <textarea id="workContent"></textarea>
                     </div>
 
@@ -726,9 +791,16 @@
                 </div>
             </div>
 
-            <div class="card no-data-card">
-                <div class="card-body">
-                    <div class="no-data">🔧 AI 기능 추가 준비중</div>
+            <div class="card">
+                <div class="card-header">업무 기록 챗봇 🤖</div>
+                <div class="card-body" id="aiCardBody">
+                    <div class="chat-window" id="chatWindow">
+                        <div class="chat-message ai-message">안녕하세요! 엔지니어님의 업무 기록에 대해 무엇이든 물어보세요. (예: "가장 최근 업무는?", "XX프로젝트 요약해 줘")</div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" placeholder="여기에 질문을 입력하세요...">
+                        <button class="btn" id="sendChatBtn" onclick="handleChatSubmit()">전송</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -779,6 +851,15 @@
                     </div>
                 </div>
 
+                <div class="card" id="waitPanel">
+                    <div class="card-header">승인 대기</div>
+                    <div class="card-body">
+                        <div class="work-list" id="waitList">
+                            <div class="no-data">기록이 없습니다</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card" id="approvalPanel">
                     <div class="card-header">팀원 업무 승인</div>
                     <div class="card-body">
@@ -789,7 +870,7 @@
                 </div>
 
             </div>
-            </div>
+        </div>
     </div>
 
     <div id="editModal" class="modal-overlay">
@@ -806,7 +887,7 @@
                     <input type="date" id="editWorkDate">
                 </div>
                 <div class="form-group">
-                    <label for="editWorkContent">업무 내용 *</label>
+                    <label for="editWorkContent">상세 내용 *</label>
                     <textarea id="editWorkContent" style="min-height: 150px;"></textarea>
                 </div>
                 <p style="font-size: 0.8rem; color: #7f8c8d;">* 고객사, 프로젝트, 장비 정보는 수정할 수 없습니다.</p>
@@ -820,15 +901,65 @@
 
 
     <script>
+        // ... 기존 스크립트 상단 부분은 변경 없이 그대로 유지 ...
         // 전역 변수
         let workRecords = [];
         let currentDate = new Date();
         let selectedDate = null;
         let currentUser = null;
-        // let isEngineer = false;
         let engineerAssignments = []; // 엔지니어의 할당 정보 저장
         
         const API_BASE = 'https://ma-helper-test-1.onrender.com/api';
+
+        // --- AI 기능 추가 ---
+        /**
+         * AI 제안 기능을 시뮬레이션하는 함수
+         * 실제 구현 시에는 이 함수 내부에서 백엔드 API를 호출해야 합니다.
+         */
+        // 채팅창에 메시지를 추가하는 헬퍼 함수
+        function addChatMessage(message, sender) {
+            const chatWindow = document.getElementById('chatWindow');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}-message`;
+            messageDiv.textContent = message;
+            chatWindow.appendChild(messageDiv);
+            // 새 메시지가 추가되면 항상 맨 아래로 스크롤
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        // 챗봇 제출 처리 함수
+        async function handleChatSubmit() {
+            const chatInput = document.getElementById('chatInput');
+            const userQuery = chatInput.value.trim();
+
+            if (!userQuery) return;
+
+            addChatMessage(userQuery, 'user');
+            chatInput.value = '';
+
+            try {
+                const res = await fetch(`${API_BASE}/ai-chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: userQuery })
+                });
+
+                const data = await res.json();
+                addChatMessage(data.reply, 'ai');
+            } catch (err) {
+                console.error('AI 응답 오류:', err);
+                addChatMessage('AI 응답에 실패했습니다. 다시 시도해 주세요.', 'ai');
+            }
+        }
+
+        // Enter 키로도 전송 가능하게 이벤트 리스너 추가
+        document.getElementById('chatInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // form 전송 방지
+                handleChatSubmit();
+            }
+        });
+
 
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', async function() {
@@ -839,6 +970,7 @@
             }
         });
 
+        // ... 나머지 스크립트는 변경 없이 그대로 유지 ...
         // 이벤트 리스너 설정
         function setupEventListeners() {
             // 고객사 선택 이벤트
@@ -881,7 +1013,12 @@
             // 역할에 따라 승인 패널 UI 처리
             if (currentUser && currentUser.role === 'leader') {
                 document.getElementById('approvalPanel').style.display = 'block';
+                document.getElementById('waitPanel').style.display = 'none';
                 loadApprovalList(); // 팀장일 경우 승인 목록 로드
+            } else {
+                document.getElementById('waitPanel').style.display = 'block';
+                document.getElementById('approvalPanel').style.display = 'none'; // 팀원은 승인 패널 숨김
+                renderPendingWorks()
             }
         }
 
@@ -1187,6 +1324,30 @@
             }
         }
 
+        function renderPendingWorks() {
+            const waitList = document.getElementById('waitList');
+            const pendingRecords = workRecords.filter(w => w.status === '대기');
+
+            if (pendingRecords.length === 0) {
+                waitList.innerHTML = '<div class="no-data">기록이 없습니다</div>';
+                return;
+            }
+
+            waitList.innerHTML = pendingRecords.map(work => `
+                <div class="work-item">
+                    <div class="work-header">
+                        <div class="project-name">${work.project}</div>
+                        <div>
+                            <span class="work-date">${formatDate(work.date)}</span>
+                            <span class="work-status pending">${work.status}</span>
+                        </div>
+                    </div>
+                    <div class="work-meta">${work.client} · ${work.equipment}</div>
+                    <div class="work-content">${work.content}</div>
+                </div>
+            `).join('');
+        }
+
         // 업무 기록 추가
         async function addWork() {
             const client = document.getElementById('clientSelect').value;
@@ -1195,8 +1356,9 @@
             const date = document.getElementById('workDate').value;
             const performer = currentUser.name;
             const content = document.getElementById('workContent').value;
+            const content_simple = document.getElementById('workContent_simple').value;
 
-            if (!client || !project || !equipment || !date || !content) {
+            if (!client || !project || !equipment || !date || !content || !content_simple) {
                 showMessage('모든 필수 항목을 입력해주세요.', 'error', 'formMessage');
                 return;
             }
@@ -1210,7 +1372,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        manager: performer, client, project, equipment, date, content
+                        manager: performer, client, project, equipment, date, content, content_simple
                     })
                 });
                 
@@ -1233,8 +1395,6 @@
                 saveBtn.textContent = '업무 기록 저장';
             }
         }
-        
-        // --- 업무 기록 수정 함수들 (신규 추가) ---
         
         // 수정 모달 열기
         function editWork(recordId) {
@@ -1282,7 +1442,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         date: date,
-                        content: content
+                        content: content,
+                        content_simple: content_simple
                     })
                 });
 
@@ -1326,6 +1487,7 @@
             document.getElementById('clientSelect').value = '';
             document.getElementById('equipmentSelect').value = '';
             document.getElementById('workContent').value = '';
+            document.getElementById('workContent_simple').value = '';
             // 날짜와 수행자는 유지
             document.getElementById('projectSelect').disabled = true;
             document.getElementById('equipmentSelect').disabled = true;

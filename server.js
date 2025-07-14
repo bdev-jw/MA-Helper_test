@@ -1,3 +1,10 @@
+// 맨 위에 추가
+const { Together } = require('together-ai');
+
+const together = new Together({
+  apiKey: process.env.TOGETHER_API_KEY, // .env에 반드시 설정
+});
+
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -480,6 +487,28 @@ app.get('/api/team-records/:leaderId', async (req, res) => {
   } catch (error) {
      console.error('❌ 팀 기록 조회 오류:', error);
      res.status(500).json({ message: '서버 오류' });
+  }
+});
+
+// AI 응답 생성 API
+app.post('/api/ai-chat', async (req, res) => {
+  const { prompt } = req.body;
+
+  if (!prompt) {
+    return res.status(400).json({ message: '프롬프트가 없습니다.' });
+  }
+
+  try {
+    const result = await together.chat.completions.create({
+      model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const reply = result.choices?.[0]?.message?.content || '응답 없음';
+    res.json({ reply });
+  } catch (error) {
+    console.error('AI 응답 오류:', error);
+    res.status(500).json({ message: 'AI 호출 실패', error: error.message });
   }
 });
 
