@@ -1,25 +1,9 @@
 // 맨 위에 추가
-// const { Together } = require('together-ai');
+const { Together } = require('together-ai');
 
-// const together = new Together({
-//   apiKey: process.env.TOGETHER_API_KEY, // .env에 반드시 설정
-// });
-
-import Together from "together-ai";
-
-const together = new Together({ apiKey: process.env.TOGETHER_API_KEY });
-
-const response = await together.endpoints.create({
-    model: "Qwen/Qwen2.5-7B",
-    display_name: "wnsdnjs356_11fd/Qwen/Qwen2.5-7B",
-    hardware: "2x_nvidia_h100_80gb_sxm",
-    autoscaling: {
-        min_replicas: 1,
-        max_replicas: 1
-    }
+const together = new Together({
+  apiKey: process.env.TOGETHER_API_KEY, // .env에 반드시 설정
 });
-
-console.log(response);
 
 require('dotenv').config();
 const express = require('express');
@@ -506,33 +490,25 @@ app.get('/api/team-records/:leaderId', async (req, res) => {
   }
 });
 
-const axios = require('axios');
-
+// AI 응답 생성 API
 app.post('/api/ai-chat', async (req, res) => {
   const { prompt } = req.body;
-  if (!prompt) return res.status(400).json({ message: "프롬프트 없음" });
 
-  const endpoint = process.env.TOGETHER_QWEN_ENDPOINT;
-  const apiKey = process.env.TOGETHER_API_KEY;
+  if (!prompt) {
+    return res.status(400).json({ message: '프롬프트가 없습니다.' });
+  }
 
   try {
-    const response = await axios.post(endpoint, {
-      prompt: prompt,
-      temperature: 0.7,
-      max_tokens: 512,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      }
+    const result = await together.chat.completions.create({
+      model: 'Qwen/Qwen2.5-7B-Instruct-Turbo',
+      messages: [{ role: 'user', content: prompt }],
     });
 
-    const reply = response.data?.output?.choices?.[0]?.text || '응답 없음';
+    const reply = result.choices?.[0]?.message?.content || '응답 없음';
     res.json({ reply });
-
   } catch (error) {
-    console.error("Qwen 호출 실패:", error?.response?.data || error.message);
-    res.status(500).json({ message: 'Qwen API 호출 실패', error: error.message });
+    console.error('AI 응답 오류:', error);
+    res.status(500).json({ message: 'AI 호출 실패', error: error.message });
   }
 });
 
