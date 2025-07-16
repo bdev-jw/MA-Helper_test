@@ -1,9 +1,25 @@
 // 맨 위에 추가
-const { Together } = require('together-ai');
+// const { Together } = require('together-ai');
 
-const together = new Together({
-  apiKey: process.env.TOGETHER_API_KEY, // .env에 반드시 설정
+// const together = new Together({
+//   apiKey: process.env.TOGETHER_API_KEY, // .env에 반드시 설정
+// });
+
+import Together from "together-ai";
+
+const together = new Together({ apiKey: process.env.TOGETHER_API_KEY });
+
+const response = await together.endpoints.create({
+    model: "Qwen/Qwen2.5-7B",
+    display_name: "wnsdnjs356_11fd/Qwen/Qwen2.5-7B",
+    hardware: "2x_nvidia_h100_80gb_sxm",
+    autoscaling: {
+        min_replicas: 1,
+        max_replicas: 1
+    }
 });
+
+console.log(response);
 
 require('dotenv').config();
 const express = require('express');
@@ -490,34 +506,35 @@ app.get('/api/team-records/:leaderId', async (req, res) => {
   }
 });
 
-// 모델 응답 라우트
+const axios = require('axios');
+
 app.post('/api/ai-chat', async (req, res) => {
   const { prompt } = req.body;
+  if (!prompt) return res.status(400).json({ message: "프롬프트 없음" });
 
-  if (!prompt) {
-    return res.status(400).json({ message: '프롬프트가 없습니다.' });
+  const endpoint = process.env.TOGETHER_QWEN_ENDPOINT;
+  const apiKey = process.env.TOGETHER_API_KEY;
+
+  try {
+    const response = await axios.post(endpoint, {
+      prompt: prompt,
+      temperature: 0.7,
+      max_tokens: 512,
+    }, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const reply = response.data?.output?.choices?.[0]?.text || '응답 없음';
+    res.json({ reply });
+
+  } catch (error) {
+    console.error("Qwen 호출 실패:", error?.response?.data || error.message);
+    res.status(500).json({ message: 'Qwen API 호출 실패', error: error.message });
   }
-
-  let reply = '';
-try {
-  const result = await together.chat.completions.create({
-    model: 'Qwen/Qwen2.5-7B',
-    messages: [{ role: 'user', content: prompt }],
-  });
-  reply = result.choices?.[0]?.message?.content || '응답 없음';
-} catch (err) {
-  console.warn('Chat 실패, text completion 시도');
-  const result = await together.completions.create({
-    model: 'Qwen/Qwen2.5-7B',
-    prompt,
-    max_tokens: 512,
-  });
-  reply = result.choices?.[0]?.text || '응답 없음';
-}
-
-res.json({ reply });
-
-})
+});
 
 // ✅ 404 에러 처리
 app.use((req, res) => {
