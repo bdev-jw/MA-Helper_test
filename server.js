@@ -500,7 +500,7 @@ app.post('/api/ai-chat', async (req, res) => {
 
   try {
     const result = await together.chat.completions.create({
-      model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+      model: 'Qwen/Qwen2.5-7B',
       messages: [{ role: 'user', content: prompt }],
     });
 

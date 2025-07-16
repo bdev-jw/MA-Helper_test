@@ -156,13 +156,15 @@
 
         #chatInput {
             flex-grow: 1;
-            border-radius: 20px;
+            border-radius: 10px;
+            width: 50px;
         }
 
         #sendChatBtn {
             width: auto;
-            border-radius: 20px;
-            padding: 10px 20px;
+            border-radius: 10px;
+            padding: 5px 5px;
+            font-size: small;
         }
         /* --- 챗봇 UI 스타일 끝 --- */
 
@@ -795,7 +797,7 @@
                 <div class="card-header">업무 기록 챗봇 🤖</div>
                 <div class="card-body" id="aiCardBody">
                     <div class="chat-window" id="chatWindow">
-                        <div class="chat-message ai-message">안녕하세요! 엔지니어님의 업무 기록에 대해 무엇이든 물어보세요. (예: "가장 최근 업무는?", "XX프로젝트 요약해 줘")</div>
+                        <div class="chat-message ai-message">엔지니어님의 업무 기록에 대해 무엇이든 물어보세요</div>
                     </div>
                     <div class="chat-input-container">
                         <input type="text" id="chatInput" placeholder="여기에 질문을 입력하세요...">
@@ -927,21 +929,43 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
-        // 챗봇 제출 처리 함수
+        // 챗봇 제출 처리 함수 - 업무 기록 기반 응답 강화
         async function handleChatSubmit() {
             const chatInput = document.getElementById('chatInput');
             const userQuery = chatInput.value.trim();
-
             if (!userQuery) return;
 
             addChatMessage(userQuery, 'user');
             chatInput.value = '';
 
+            // 최근 10개의 업무 기록을 간결하게 정리
+            const relevantRecords = workRecords
+                .filter(r => r.client && r.client !== '기타')
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 10)
+                .map((r, i) => {
+                    return `${i + 1}. [${r.date}] ${r.project} (${r.client}, ${r.equipment}) - ${r.content_simple || r.content}`;
+                })
+                .join('\n');
+
+            // 프롬프트 생성
+            const enhancedPrompt = `
+        당신은 엔지니어의 업무 기록 기반 AI 비서입니다. 아래는 최근 업무 기록입니다.
+
+        최근 업무 기록:
+        ${relevantRecords}
+
+        사용자의 질문:
+        ${userQuery}
+
+        위 기록을 참고하여 실제 업무 내용을 바탕으로 정확하게 응답해 주세요. 만약 관련 기록이 없다면 그렇게 안내해 주세요.
+        `;
+
             try {
                 const res = await fetch(`${API_BASE}/ai-chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: userQuery })
+                    body: JSON.stringify({ prompt: enhancedPrompt })
                 });
 
                 const data = await res.json();
