@@ -490,7 +490,7 @@ app.get('/api/team-records/:leaderId', async (req, res) => {
   }
 });
 
-// AI 응답 생성 API
+// 모델 응답 라우트
 app.post('/api/ai-chat', async (req, res) => {
   const { prompt } = req.body;
 
@@ -498,19 +498,26 @@ app.post('/api/ai-chat', async (req, res) => {
     return res.status(400).json({ message: '프롬프트가 없습니다.' });
   }
 
-  try {
-    const result = await together.chat.completions.create({
-      model: 'Qwen/Qwen2.5-7B',
-      messages: [{ role: 'user', content: prompt }],
-    });
+  let reply = '';
+try {
+  const result = await together.chat.completions.create({
+    model: 'Qwen/Qwen2.5-7B',
+    messages: [{ role: 'user', content: prompt }],
+  });
+  reply = result.choices?.[0]?.message?.content || '응답 없음';
+} catch (err) {
+  console.warn('Chat 실패, text completion 시도');
+  const result = await together.completions.create({
+    model: 'Qwen/Qwen2.5-7B',
+    prompt,
+    max_tokens: 512,
+  });
+  reply = result.choices?.[0]?.text || '응답 없음';
+}
 
-    const reply = result.choices?.[0]?.message?.content || '응답 없음';
-    res.json({ reply });
-  } catch (error) {
-    console.error('AI 응답 오류:', error);
-    res.status(500).json({ message: 'AI 호출 실패', error: error.message });
-  }
-});
+res.json({ reply });
+
+})
 
 // ✅ 404 에러 처리
 app.use((req, res) => {
