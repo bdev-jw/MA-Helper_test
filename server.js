@@ -183,7 +183,6 @@ app.get('/api/maintenance/:clientId', async (req, res) => {
                 if (Array.isArray(records)) {
                     // '승인' 상태의 기록만 필터링하고, '업무 요약'을 'content'로 바꿔서 전달
                     clientFacingData[equipment] = records
-                        .filter(record => record.status === '승인') // 승인된 기록만 고객에게 보여줍니다.
                         .map(record => ({
                             date: record.date,
                             cycle: record.cycle,
