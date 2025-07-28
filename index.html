@@ -7,117 +7,147 @@
   <script src="/data.js"></script>
   <style>
     body {
-      background-color: #121212;
-      color: #00f0b5;
-      font-family: 'Arial', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+  background: url('public/background.jpg') center center/cover no-repeat fixed,
+              linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-family: 'Arial', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
 
-    .login-container {
-      background-color: #1e1e1e;
-      padding: 40px 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0, 240, 181, 0.2);
-      width: 320px;
-    }
+.login-container {
+  background: #3355fe;
+  backdrop-filter: blur(10px);
+  padding: 40px 30px;
+  border-radius: 20px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
 
-    .login-container h1 {
-      font-size: 24px;
-      margin-bottom: 30px;
-      color: #00f0b5;
-    }
+/* 로고 스타일 */
+.logo {
+  width: px;
+  height: 80px;
+  margin: 0 auto 20px auto;
+  display: block;
+}
 
-    .tab-buttons {
-      display: flex;
-      justify-content: space-between;
-      background-color: transparent;
-      border: 2px solid #00f0b5;
-      border-radius: 30px;
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
+.login-container h1 {
+  font-size: 20px;
+  margin-bottom: 30px;
+  color: white;
+  font-weight: normal;
+}
 
-    .tab-buttons button {
-      flex: 1;
-      padding: 10px 0;
-      background: none;
-      border: none;
-      color: #00f0b5;
-      cursor: pointer;
-      font-size: 16px;
-    }
+.tab-buttons {
+  display: flex;
+  justify-content: space-between;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 25px;
+  overflow: hidden;
+  margin-bottom: 30px;
+  padding: 3px;
+}
 
-    .tab-buttons button.active {
-      background-color: #00f0b5;
-      color: #000;
-    }
+.tab-buttons button {
+  flex: 1;
+  padding: 12px 0;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 22px;
+  transition: all 0.3s ease;
+}
 
-    .form-section {
-      display: none;
-    }
+.tab-buttons button.active {
+  background-color: white;
+  color: #667eea;
+  font-weight: bold;
+}
 
-    .form-section.active {
-      display: block;
-    }
+.form-section {
+  display: none;
+}
 
-    input {
-      width: 100%;
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid #00f0b5;
-      padding: 10px 5px;
-      margin-bottom: 20px;
-      color: white;
-      font-size: 14px;
-    }
+.form-section.active {
+  display: block;
+}
 
-    input::placeholder {
-      color: #aaa;
-    }
+input[type="text"], input[type="password"] {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 15px 0;
+  margin-bottom: 25px;
+  color: white;
+  font-size: 16px;
+  box-sizing: border-box;
+}
 
-    .auto-login {
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
-      color: #00f0b5;
-    }
+input[type="text"]:focus, input[type="password"]:focus {
+  outline: none;
+  border-bottom: 1px solid white;
+}
 
-    .auto-login input {
-      width: auto;
-      margin-right: 8px;
-    }
+input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
 
-    button.login-btn {
-      width: 100%;
-      background-color: #00f0b5;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      color: black;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+.auto-login {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  color: white;
+  font-size: 14px;
+}
 
-    button.login-btn:hover {
-      background-color: #00dba5;
-    }
+.auto-login input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+  margin-bottom: 0;
+  border: none;
+  accent-color: white;
+}
 
-    p#errorMessage, p#engineerError {
-      color: #ff6b6b;
-      font-size: 14px;
-      margin-top: -15px;
-      margin-bottom: 10px;
-    }
+button.login-btn {
+  width: 100%;
+  background-color: #4c63d2;
+  border: none;
+  padding: 15px;
+  border-radius: 25px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button.login-btn:hover {
+  background-color: #3a4fb8;
+  transform: translateY(-2px);
+}
+
+p#errorMessage, p#engineerError {
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-top: -15px;
+  margin-bottom: 15px;
+}
   </style>
 </head>
 <body>
 
 <div class="login-container">
-  <h1>MA집사<br>로그인</h1>
+  <img src="public/logo.png" alt="MA집사 로고" class="logo">
+  <h1></h1>
   
   <div class="tab-buttons">
     <button id="clientTab" class="active" onclick="switchTab('client')">고객사</button>
