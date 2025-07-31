@@ -84,7 +84,7 @@ body {
     background: #ffffff;
     padding: 24px 240px 120px 240px;
     border-radius: 24px 24px 0 0;
-    height: 300px;
+    height: auto
 }
 .maintenance-panel {
     background: #EAEDFA;
@@ -254,7 +254,7 @@ h1 {
 }
 .business-card:first-child {
     background: url('public/납품장비.png') ;
-    background-size: 120%; /* 이미지가 카드 영역을 꽉 채우도록 */
+    background-size: 200%; /* 이미지가 카드 영역을 꽉 채우도록 */
     background-repeat: no-repeat; /* 이미지가 반복되지 않도록 */
     background-position: center; /* 이미지가 카드 중앙에 오도록 */
     box-shadow: 0 8px 32px rgba(74, 94, 255, 0.3);
@@ -266,7 +266,7 @@ h1 {
 
 .business-card:nth-child(2) {
     background: url('public/영업담당자.png') ;
-    background-size: 120%; /* 이미지가 카드 영역을 꽉 채우도록 */
+    background-size: 200%; /* 이미지가 카드 영역을 꽉 채우도록 */
     background-repeat: no-repeat; /* 이미지가 반복되지 않도록 */
     background-position: center; /* 이미지가 카드 중앙에 오도록 */
     box-shadow: 0 8px 32px rgba(107, 127, 255, 0.3);
@@ -583,25 +583,51 @@ h1 {
 
 /* 모바일 반응형 디자인 */
 @media (max-width: 768px) {
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: auto;
+    }
+
+    /* 전체 컨테이너 - 세로 스크롤 가능 */
+    .container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+
     /* 앱 타이틀 모바일 조정 */
     .app-title {
         padding: 0 16px;
         font-size: 1.1rem;
     }
+
     .logo {
-    height: 32px;
-    width: auto;
-}
-    /* 1. business-info-panel - 배경 이미지 제거, 2/5 높이 */
+        height: 32px;
+        width: auto;
+    }
+
+    /* 헤더 영역 */
+    .menu {
+        padding: 8px 0;
+        height: 60px;
+        flex-shrink: 0;
+    }
+
+    /* 사업정보 영역 */
     .business-info-panel {
-        background: #ffffff; /* 단색 배경으로 변경 */
+        background: #ffffff;
         padding: 4px 16px 0 16px;
-        height: 36vh; /* 전체 높이의 2/5 */
+        min-height: 200px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
-
+        flex-shrink: 0;
     }
+
     .header-flex {
         color: #3356fe;
         display: flex;
@@ -609,14 +635,15 @@ h1 {
         justify-content: flex-start;
         gap: 2px;
         flex-wrap: wrap;
-}
+    }
+
     .header-title {
         justify-content: flex-start;
         font-size: 1.2rem;
         font-weight: 700;
         color: #3356fe;
     }
-    
+
     #clientHeader {
         color: white;
         font-size: 1.6rem;
@@ -624,75 +651,76 @@ h1 {
         text-align: left;
         margin: 12px 4px 4px 4px;
     }
-    
-    /* 2. business-card를 2행2열로 구성 */
+
+    /* business-card 2행 2열 */
     .business-card-container {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
+        margin-bottom: 8px;
     }
-    .business-card:nth-child(3) {
-        background: url('public/사업기간_.png') ;
-        background-size: 120%; /* 이미지가 카드 영역을 꽉 채우도록 */
-        background-repeat: no-repeat; /* 이미지가 반복되지 않도록 */
-        background-position: center; /* 이미지가 카드 중앙에 오도록 */
-        box-shadow: 0 8px 32px rgba(74, 94, 255, 0.3);
+
+    .business-card {
+        min-height: 85px;
+        max-height: 100px;
         border-radius: var(--card-radius);
-        color: white;
         width: 100%;
+        color: white;
+    }
+
+    .business-card:nth-child(3) {
+        background: url('public/사업기간_.png');
+        background-size: 200%;
+        background-repeat: no-repeat;
+        background-position: center;
+        box-shadow: 0 8px 32px rgba(74, 94, 255, 0.3);
         height: 140px;
     }
 
     .business-card:nth-child(4) {
-        background: url('public/엔지니어담당자_.png') ;
-        background-size: 120%; /* 이미지가 카드 영역을 꽉 채우도록 */
-        background-repeat: no-repeat; /* 이미지가 반복되지 않도록 */
-        background-position: center; /* 이미지가 카드 중앙에 오도록 */
+        background: url('public/엔지니어담당자_.png');
+        background-size: 200%;
+        background-repeat: no-repeat;
+        background-position: center;
         box-shadow: 0 8px 32px rgba(107, 127, 255, 0.3);
-        border-radius: var(--card-radius);
-        color: white;
-        width: 100%;
         height: 140px;
     }
-    
-    
-    .business-card {
-        min-height: 85px;
-        max-height: 100px;
-    }
-    
+
     .business-card::after {
         width: 50px;
         height: 50px;
         right: 3px;
         bottom: 3px;
     }
-    
+
     .card-title {
         font-size: 0.9rem;
         margin-bottom: 6px;
     }
-    
+
     .card-content {
         font-size: 0.75rem;
     }
-    
-    /* 3. equipment-panel을 1/5 높이로, 1행 가로 스크롤 */
+
+    /* 장비 영역 */
     .equipment-panel {
+        flex: 0 0 auto;
+        min-height: 140px;
         background: #ffffff;
-        padding: 12px 16px 12px 16px;
+        padding: 12px 16px;
         border-radius: 16px 16px 0 0;
-        height: 18vh; /* 전체 높이의 1/5 */
-        overflow: hidden;
+        box-sizing: border-box;
     }
 
-    .equipment-button.active {
-    background: #95a4f0;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: none;
-}
-    
+    .section-title {
+        font-size: 16px;
+        margin: 6px 0;
+        padding-left: 6px;
+        height: 20px;
+        line-height: 20px;
+        flex-shrink: 0;
+    }
+
     .scroll-container {
         display: flex;
         flex-direction: row;
@@ -701,13 +729,14 @@ h1 {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         padding: 8px 0;
-        height: 100%;
+        height: calc(100% - 35px);
+        box-sizing: border-box;
     }
-    
+
     .scroll-container::-webkit-scrollbar {
         display: none;
     }
-    
+
     .equipment-button {
         min-width: 70px;
         max-width: 70px;
@@ -715,86 +744,79 @@ h1 {
         flex-shrink: 0;
         padding: 6px;
     }
-    
+
     .equipment-button img {
         width: 50px;
         height: 50px;
     }
-    
+
     .equipment-button span {
         font-size: 9px;
         margin-top: 3px;
     }
-    
-    .section-title {
-        font-size: 16px;
-        margin: 6px 0;
-        padding-left: 6px;
+
+    .equipment-button.active {
+        background: #95a4f0;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: none;
     }
-    
-    /* 4. maintenance-panel을 2/5 높이로, 2행n열 아래 스크롤 */
+
+    /* 유지보수 카드 영역 */
     .maintenance-panel {
-        background: white; /* 흰색 배경으로 변경 */
-        padding: 12px 16px 0 16px;
-        height: 40vh; /* 전체 높이의 2/5 */
+        flex-grow: 1;
+        background: white;
+        padding: 12px 16px 20px 16px;
+        box-sizing: border-box;
         overflow: hidden;
     }
-    
+
     .maintenance-card-wrapper {
-        height: 100%;
+        max-height: 100%;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
     }
-    
+
     .maintenance-card-scroller {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
-        padding: 8px 0 20px 0;
+        padding: 8px 0;
     }
-    
+
     .maintenance-card {
         padding: 12px;
         border-radius: 8px;
         background-color: #f3f3f3;
     }
-    
+
     .manager {
         font-size: 1rem;
     }
-    
+
     .manager-icon {
         width: 60px;
         height: 60px;
     }
-    
+
     .content {
         margin: 6px 8px;
         font-size: 0.75rem;
     }
-    
+
     .card-header {
         font-size: 10px;
     }
-    
-    /* 컨테이너 높이 조정 */
-    .container {
-        height: calc(100vh - var(--header-height) - 85px);
-        padding: 0;
-    }
-    
-    /* 검색 관련 모바일 조정 */
+
+    /* 검색창 */
     .search-input-inline.active {
         width: 140px;
     }
-    
+
     #searchIcon {
         width: 32px;
         height: 32px;
-    }
-    .menu{
-        padding: 8px 0;
-        height: 60px;
     }
 }
 
