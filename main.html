@@ -594,22 +594,20 @@ h1 {
     .container {
         display: flex;
         flex-direction: column;
-        min-height: 100vh;
+        min-height: 100dvh;
         overflow-y: auto;
+        padding-bottom: 0px;
         box-sizing: border-box;
     }
-
     /* 앱 타이틀 모바일 조정 */
     .app-title {
         padding: 0 16px;
-        font-size: 1.1rem;
+        font-size: 0.9rem;
     }
-
     .logo {
         height: 32px;
         width: auto;
     }
-
     /* 헤더 영역 */
     .menu {
         padding: 8px 0;
@@ -649,7 +647,7 @@ h1 {
         font-size: 1.6rem;
         font-weight: 700;
         text-align: left;
-        margin: 12px 4px 4px 4px;
+        margin: 4px 4px 4px 4px;
     }
 
     /* business-card 2행 2열 */
@@ -657,12 +655,11 @@ h1 {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
-        margin-bottom: 8px;
     }
 
     .business-card {
-        min-height: 85px;
-        max-height: 100px;
+        min-height: 75px;
+        max-height: 90px;
         border-radius: var(--card-radius);
         width: 100%;
         color: white;
@@ -707,7 +704,7 @@ h1 {
         flex: 0 0 auto;
         min-height: 140px;
         background: #ffffff;
-        padding: 12px 16px;
+        padding: 12px 16px 0 16px;
         border-radius: 16px 16px 0 0;
         box-sizing: border-box;
     }
@@ -769,6 +766,7 @@ h1 {
         padding: 12px 16px 20px 16px;
         box-sizing: border-box;
         overflow: hidden;
+        margin-bottom: 0;
     }
 
     .maintenance-card-wrapper {
