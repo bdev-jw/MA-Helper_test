@@ -131,13 +131,19 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            max-height: 100%; /* ← 부모 안에서 넘치지 않게 */
         }
 
         .chat-message {
             padding: 10px 15px;
             border-radius: 20px;
-            max-width: 80%;
+            max-width: 100%;
             line-height: 1.5;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: pre-wrap;
+            box-sizing: border-box;
         }
 
         .ai-message {
@@ -145,6 +151,10 @@
             color: #2d3748;
             border-bottom-left-radius: 8px;
             align-self: flex-start;
+            max-width: 100%; /* ← 강제 제한 */
+            box-sizing: border-box;
+            word-break: break-word;
+            white-space: pre-wrap;
         }
 
         .user-message {
@@ -851,6 +861,8 @@
             }
         }
     </style>
+    <!-- marked.js CDN 추가 예시 (HTML 파일) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <div class="header">
@@ -922,7 +934,7 @@
             </div>
 
             <div class="card">
-                <div class="card-header">업무 기록 챗봇 🤖</div>
+                <div class="card-header">업무 기록 챗봇</div>
                 <div class="card-body" id="aiCardBody">
                     <div class="chat-window" id="chatWindow">
                         <div class="chat-message ai-message">엔지니어님의 업무 기록에 대해 무엇이든 물어보세요</div>
@@ -1051,7 +1063,15 @@
             const chatWindow = document.getElementById('chatWindow');
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${sender}-message`;
-            messageDiv.textContent = message;
+            // AI 메시지일 경우에만 마크다운을 HTML로 변환!
+            if (sender === 'ai') {
+                // AI가 마크다운을 줬을 경우, marked.js로 HTML 변환 (marked.parse() 사용)
+                messageDiv.innerHTML = marked.parse(message); // 여기가 핵심이야!
+            } else {
+                // 사용자 메시지는 텍스트 그대로
+                messageDiv.textContent = message; 
+            }
+            
             chatWindow.appendChild(messageDiv);
             // 새 메시지가 추가되면 항상 맨 아래로 스크롤
             chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -1088,8 +1108,11 @@
             ${userQuery}
 
             위 기록을 참고하여 실제 업무 내용을 바탕으로 정확하게 응답해 주세요. 만약 관련 기록이 없다면 그렇게 안내해 주세요.
+            답변은 **마크다운 형식**으로 깔끔하게 정리해 주세요.
+            핵심 내용은 **볼드체**로 강조하고, 목록이 필요할 때는 **불릿 포인트**(-)나 **숫자 목록**(1., 2.)을 사용해서 보기 쉽게 나타내 주세요.
+            정보를 구분해서 보여줄 필요가 있다면 **소제목(##)** 을 활용해 주셔도 좋습니다.
             `;
-
+            
             try {
                 const res = await fetch(`${API_BASE}/ai-chat`, {
                     method: 'POST',

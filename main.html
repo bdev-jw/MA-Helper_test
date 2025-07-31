@@ -4,749 +4,821 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MA집사</title>
+    <link rel="stylesheet" href="/regular-modal/regular-modal.css">
+    <link rel="stylesheet" href="/emergency-modal/emergency-modal.css">
+    <link rel="stylesheet" href="/bi-modal/bi-modal.css">
     <style>
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --header-height: 67px;
-            --primary-blue: #3356fe;
-            --secondary-blue: #5B9BD5;
-            --accent-purple: #8B7EC8;
-            --light-blue: #E8F4FD;
-            --gradient-blue: linear-gradient(135deg, #3356fe 0%, #2a44cc 100%);
-            --gradient-purple: linear-gradient(135deg, #8B7EC8 0%, #6B5B95 100%);
-            --gradient-light: linear-gradient(135deg, #B8E6FF 0%, #D4EDDA 100%);
-            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --card-radius: 16px;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
-            background: white;
-            color: #333;
-            line-height: 1.6;
-            min-height: 100vh;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 16px 16px 16px;
-            height: calc(100vh - var(--header-height) - 85px); /* ← 핵심 */
-            display: flex;
-            flex-direction: column;
-        }
-
-        .app-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            font-size: 1.4rem;
-            font-weight: 700;
-            background: #3356fe;
-            color: white;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            height: var(--header-height);
-            border-bottom: 3px solid rgba(255,255,255,0.2);
-        }
-
-        .logo {
-            height: 32px;
-            width: auto;
-            filter: brightness(0) invert(1);
-        }
-
-        .sticky-top-panel {
-            position: relative;
-            background: white;
-            z-index: 99;
-            padding: 20px 0 20px 0;
-            flex-shrink: 0;
-        }
-        
-        .maintenance-card-wrapper {
-            flex: 1;
-            height: auto;
-            overflow-y: auto;
-            position: relative;
-            -webkit-overflow-scrolling: touch
-        }
-
-        .maintenance-card-scroller {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            padding: 0 0 20px 0;
-            width: 100%;
-            height: auto;
-            overflow: visible;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(51, 86, 254, 0.3) transparent;
-            position: relative;
-            z-index: 1;
-            touch-action: pan-y; /* ← 드래그 가능한 영역 지정 */
-        }
-
-        .maintenance-card-scroller::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .maintenance-card-scroller::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .maintenance-card-scroller::-webkit-scrollbar-thumb {
-            background: rgba(51, 86, 254, 0.3);
-            border-radius: 3px;
-        }
-
-        .maintenance-card-scroller::-webkit-scrollbar-thumb:hover {
-            background: rgba(51, 86, 254, 0.5);
-        }
-
-        @media (max-width: 768px) {
-            .maintenance-card-scroller {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-        }
-        
-        #searchIcon {
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            filter: brightness(0) invert(1);
-        }
-
-        .search-container-inline {
-            display: none;
-            position: relative;
-        }
-
-        .search-input-inline {
-            width: 0;
-            padding: 8px 12px;
-            border-radius: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            background-color: rgba(255,255,255,0.9);
-            color: #333;
-            transition: all 0.3s ease-in-out;
-            visibility: hidden;
-            opacity: 0;
-        }
-
-        .search-input-inline.active {
-            width: 200px;
-            visibility: visible;
-            opacity: 1;
-        }
-
-        #clearSearchBtn {
-            display: none;
-            margin-left: 8px;
-            cursor: pointer;
-            color: white;
-            background: rgba(231, 76, 60, 0.9);
-            border: none;
-            border-radius: 12px;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        h1 {
-            text-align: center;
-            font-weight: bold;
-            color: #3356fe;
-            font-size: clamp(1.8rem, 4vw, 2.5rem);
-            margin: 0 auto 12px;
-        }
-        
-        .header-flex {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .header-logo {
-            height: clamp(48px, 6vw, 64px);
-            object-fit: contain;
-        }
-
-        .header-title {
-            font-size: clamp(24px, 5vw, 32px);
-            color: #3356fe;
-            margin: 0;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .header-subtitle {
-            text-align: left;
-            color: #666;
-            font-size: clamp(14px, 3vw, 18px);
-            font-weight: 500;
-            margin-bottom: 20px;
-        }
-
-        .business-card-container {
-            width: 100%;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 16px;
-            padding: 10px 0;
-        }
-
-        .business-card {
-            padding: 12px 16px;
-            background: white;
-            box-shadow: var(--card-shadow);
-            border-radius: var(--card-radius);
-            border: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            min-height: 80px;
-            max-height: 100px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .business-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-blue);
-        }
-
-        .business-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        /* 특별한 카드 스타일 - 이미지 참조 */
-        .business-card:first-child {
-            background: linear-gradient(135deg, #3356fe 0%, #2a44cc 100%);
-            color: white;
-        }
-
-        .business-card:nth-child(2) {
-            background: linear-gradient(135deg, #8B7EC8 0%, #6B5B95 100%);
-            color: white;
-        }
-
-        .business-card:nth-child(3) {
-            background: linear-gradient(135deg, #B8E6FF 0%, #A8D8EA 100%);
-            color: #2c3e50;
-        }
-
-        .business-card:nth-child(4) {
-            background: linear-gradient(135deg, #B8E6FF 0%, #A8D8EA 100%);
-            color: #2c3e50;
-        }
-
-        .card-title {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 6px;
-            line-height: 1.3;
-        }
-
-        .card-content {
-            font-size: 0.85rem;
-            font-weight: 500;
-            opacity: 0.9;
-            line-height: 1.3;
-        }
-
-        .card-icon {
-            width: 32px;
-            height: 32px;
-            margin-bottom: 12px;
-            opacity: 0.8;
-        }
-
-        .section-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin: 12px 0 12px 0;
-            padding-left: 8px;
-            border-left: 4px solid #3356fe;
-        }
-
-        #equipmentTabsContainer {
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-            padding: 0 0 16px 0;
-        }
-
-        .scroll-container {
-            display: grid;
-            grid-auto-flow: column;
-            grid-auto-columns: minmax(100px, 1fr);
-            gap: 12px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            padding: 4px;
-        }
-        .scroll-container::-webkit-scrollbar { display: none; }
-
-        .equipment-button {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 80px;
-            border: 2px solid transparent;
-            border-radius: var(--card-radius);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #a8c5ff;
-            color: #4a6fb5;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .equipment-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: #3356fe;
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-
-        .equipment-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(51, 86, 254, 0.2);
-        }
-
-        .equipment-button:hover::before {
-            transform: scaleX(1);
-        }
-
-        .equipment-button.has-records {
-            background: #8fb4ff;
-            border-color: #6b9eff;
-        }
-        
-        .equipment-button.active {
-            background: #3356fe;
-            color: white;
-            border-color: #3356fe;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(51, 86, 254, 0.4);
-        }
-
-        .equipment-button.active::before {
-            transform: scaleX(1);
-            background: rgba(255,255,255,0.4);
-        }
-
-        .equipment-button.no-records {
-            background: #e0e8ff;
-            color: #9bb0d6;
-            opacity: 0.7;
-        }
-        
-        .equipment-button img {
-            width: 28px;
-            height: 28px;
-            object-fit: contain;
-            margin-bottom: 6px;
-            transition: transform 0.3s ease;
-        }
-
-        .equipment-button.active img {
-            transform: scale(1.1);
-            filter: brightness(0) invert(1);
-        }
-        
-        .equipment-button span {
-            font-size: 11px;
-            font-weight: 600;
-            text-align: center;
-            line-height: 1.2;
-        }
-        
-        .maintenance-card {
-            background: white;
-            padding: 20px;
-            border-radius: var(--card-radius);
-            box-shadow: var(--card-shadow);
-            border: none;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .maintenance-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-blue);
-        }
-
-        .maintenance-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: flex-end;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--primary-blue);
-            margin-bottom: 4px;
-        }
-
-        .card-body {
-            flex-grow: 1;
-        }
-        
-        .manager {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-        }
-
-        .manager-icon {
-            width: 44px;
-            height: 44px;
-            margin-right: 12px;
-            border-radius: 50%;
-            border: 3px solid var(--primary-blue);
-            background: var(--light-blue);
-        }
-
-        .content {
-            font-size: 0.95rem;
-            color: #495057;
-            line-height: 1.6;
-            font-weight: 500;
-        }
-
-        .menu {
-            display: flex;
-            justify-content: center;
-            padding: 12px 0;
-            background: #3356fe;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100vw;
-            border-top: none;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-            z-index: 10;
-            height: 85px;
-        }
-
-        .menu::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: rgba(255,255,255,0.3);
-        }
-
-        .menu-icon-container {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-            max-width: 400px;
-            align-items: center;
-        }
-
-        .menu-icon {
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 12px;
-        }
-
-        .menu-icon img {
-            width: 28px;
-            height: 28px;
-            object-fit: contain;
-            transition: all 0.3s ease;
-            filter: brightness(0) invert(1);
-        }
-        
-        .menu-icon:hover {
-            transform: translateY(-2px);
-            background: rgba(255,255,255,0.1);
-        }
-
-        .menu-icon:hover img {
-            transform: scale(1.1);
-        }
-
-        .menu-icon span {
-            font-size: 11px;
-            font-weight: 600;
-            margin-top: 4px;
-            text-align: center;
-            line-height: 1.2;
-            color: white;
-        }
-
-        .badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            color: white;
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            font-size: 10px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .modal-backdrop {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            z-index: 1000;
-            backdrop-filter: blur(4px);
-        }
-
-        .modal-container {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: var(--card-radius);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            z-index: 1001;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            color: #333;
-            border: none;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 24px;
-            cursor: pointer;
-            color: #adb5bd;
-            line-height: 1;
-            transition: color 0.3s ease;
-        }
-        .modal-close:hover {
-            color: #495057;
-        }
-        
-        .modal-container h2 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 24px;
-            font-weight: 700;
-        }
-        
-        .modal-container input, .modal-container textarea, .modal-container button {
-            width: 100%;
-            padding: 14px 16px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            font-family: inherit;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-        }
-
-        .modal-container input:focus, .modal-container textarea:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-        }
-        
-        .modal-container textarea {
-            background-color: white;
-            resize: vertical;
-            min-height: 120px;
-            margin-bottom: 20px;
-            font-family: inherit;
-        }
-        
-        .modal-container button {
-            background: var(--gradient-blue);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .modal-container button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-        }
-        
-        #calendar, #emergencyCalendar {
-            background: white;
-            border-radius: var(--card-radius);
-            padding: 16px;
-            border: none;
-            box-shadow: var(--card-shadow);
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-        
-        .calendar-day-header {
-            font-weight: 700;
-            text-align: center;
-            font-size: 0.8rem;
-            padding: 12px 4px;
-            color: #495057;
-        }
-
-        .calendar-day {
-            min-height: 40px;
-            padding: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 500;
-        }
-        .calendar-day:hover { 
-            background-color: var(--light-blue);
-            transform: scale(1.1);
-        }
-        .calendar-day.today { 
-            background: var(--gradient-blue);
-            color: white;
-            font-weight: 700;
-        }
-        .calendar-day.selected { 
-            background: var(--primary-blue);
-            color: white;
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-        }
-        .calendar-day.other-month { 
-            color: #adb5bd;
-            opacity: 0.5;
-        }
-        .day-number.saturday { color: #0066cc; }
-        .day-number.holiday { color: #e74c3c; }
-        
-        #selectedDate, #selectedEmergencyDate {
-            margin: 20px 0;
-            font-weight: 700;
-            text-align: center;
-            color: var(--primary-blue);
-            font-size: 1.1rem;
-        }
-
-        /* 반응형 디자인 개선 */
-        @media (max-width: 480px) {
-            .container {
-                padding: 0 12px 85px 12px;
-            }
-            
-            .business-card-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-            
-            .equipment-button {
-                height: 70px;
-            }
-            
-            .maintenance-card {
-                padding: 16px;
-            }
-        }
-
-        @media (min-width: 769px) {
-            .maintenance-card-scroller {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .maintenance-card-scroller {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .business-card-container {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+:root {
+    --header-height: 67px;
+    --primary-blue: #3356fe;
+    --secondary-blue: #5B9BD5;
+    --accent-purple: #8B7EC8;
+    --light-blue: #E8F4FD;
+    --gradient-blue: linear-gradient(135deg, #3356fe 0%, #2a44cc 100%);
+    --gradient-purple: linear-gradient(135deg, #8B7EC8 0%, #6B5B95 100%);
+    --gradient-light: linear-gradient(135deg, #B8E6FF 0%, #D4EDDA 100%);
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --card-radius: 16px;
+}
+body {
+    background: white;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    height: 100%;
+    overflow: hidden;
+}
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    height: calc(100vh - var(--header-height) - 85px);
+    display: flex;
+    flex-direction: column;
+}
+.app-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 240px 0 240px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    background: #3356fe;
+    color: white;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: var(--header-height);
+    border-bottom: 3px solid rgba(255,255,255,0.2);
+}
+.logo {
+    height: 45px;
+    width: auto;
+}
+.business-info-panel{
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.2)), url('public/login3d.jpg') no-repeat center center;
+    background-size: cover;
+    position: relative;
+    z-index: 99;
+    padding: 20px 240px 20px 240px;
+    flex-shrink: 0;
+}
+#clientHeader {
+    color: white;
+    font-size: 2.2rem;
+    font-weight: 900;
+    text-align: left;
+    margin: 0 0 20px 20px;
+}
+.business-card-container-wrapper {
+    border-radius: 16px;
+    width: 100%;
+}
+.equipment-panel {
+    background: #ffffff;
+    padding: 24px 240px 120px 240px;
+    border-radius: 24px 24px 0 0;
+    height: 300px;
+}
+.maintenance-panel {
+    background: #EAEDFA;
+    padding: 24px 240px 0 240px;
+    flex-grow: 1;
+}
+.maintenance-card-wrapper {
+    flex: 1;
+    max-height: 420px;
+    overflow-y: auto;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.maintenance-card-scroller {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    padding: 0 0 20px 0;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(51, 86, 254, 0.3) transparent;
+    position: relative;
+    z-index: 1;
+    touch-action: pan-y;
+}
+.maintenance-card-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+#searchIcon {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    filter: brightness(0) invert(1);
+}
+
+.search-container-inline {
+    display: none;
+    position: relative;
+}
+
+.search-input-inline {
+    width: 0;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    background-color: rgba(255,255,255,0.9);
+    color: #333;
+    transition: all 0.3s ease-in-out;
+    visibility: hidden;
+    opacity: 0;
+}
+.search-input-inline.active {
+    width: 200px;
+    visibility: visible;
+    opacity: 1;
+}
+#clearSearchBtn {
+    display: none;
+    margin-left: 8px;
+    cursor: pointer;
+    color: white;
+    background: rgba(231, 76, 60, 0.9);
+    border: none;
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+h1 {
+    text-align: center;
+    font-weight: bold;
+    color: #3356fe;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    margin: 0 auto 12px;
+}
+.header-flex {
+    display: flex;
+    justify-content: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.header-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.header-flex .header-title {
+    font-size: 0.7em; /* client_name보다 살짝 작게 표시 (예시) */
+}
+.header-logo {
+    height: clamp(48px, 6vw, 64px);
+    object-fit: contain;
+}
+.business-card-container {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    padding: 12px 0;
+}
+
+.business-card {
+    padding: 20px 24px 25px;
+    background: white;
+    box-shadow: var(--card-shadow);
+    border-radius: var(--card-radius);
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    min-height: 120px;
+    max-height: 140px;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+.business-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-blue);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+.business-card:hover::before {
+    transform: scaleX(1);
+}
+.business-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(74, 94, 255, 0.25);
+}
+.business-card::after {
+    content: '';
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 84px;
+    height: 84px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.8;
+    pointer-events: none;
+}
+.business-card:nth-child(1)::after {
+    background-image: url('public/장비.png');
+}
+.business-card:nth-child(2)::after {
+    background-image: url('public/영업.png');
+}
+.business-card:nth-child(3)::after {
+    background-image: url('public/엔지니어.png');
+}
+.business-card:nth-child(4)::after {
+    background-image: url('public/사업기간.png');
+}
+.business-card:first-child {
+    background: url('public/납품장비.png') ;
+    background-size: 120%; /* 이미지가 카드 영역을 꽉 채우도록 */
+    background-repeat: no-repeat; /* 이미지가 반복되지 않도록 */
+    background-position: center; /* 이미지가 카드 중앙에 오도록 */
+    box-shadow: 0 8px 32px rgba(74, 94, 255, 0.3);
+    border-radius: var(--card-radius);
+    color: white;
+    width: 100%;
+    height: 140px;
+}
+
+.business-card:nth-child(2) {
+    background: url('public/영업담당자.png') ;
+    background-size: 120%; /* 이미지가 카드 영역을 꽉 채우도록 */
+    background-repeat: no-repeat; /* 이미지가 반복되지 않도록 */
+    background-position: center; /* 이미지가 카드 중앙에 오도록 */
+    box-shadow: 0 8px 32px rgba(107, 127, 255, 0.3);
+    border-radius: var(--card-radius);
+    color: white;
+    width: 100%;
+    height: 140px;
+}
+
+.business-card:nth-child(3) {
+    background: url('public/엔지니어담당자_.png') ;
+    background-size: 120%; /* 이미지가 카드 영역을 꽉 채우도록 */
+    background-repeat: no-repeat; /* 이미지가 반복되지 않도록 */
+    background-position: center; /* 이미지가 카드 중앙에 오도록 */
+    box-shadow: 0 8px 32px rgba(74, 94, 255, 0.3);
+    border-radius: var(--card-radius);
+    color: white;
+    width: 100%;
+    height: 140px;
+}
+
+.business-card:nth-child(4) {
+    background: url('public/사업기간_.png') ;
+    background-size: 120%; /* 이미지가 카드 영역을 꽉 채우도록 */
+    background-repeat: no-repeat; /* 이미지가 반복되지 않도록 */
+    background-position: center; /* 이미지가 카드 중앙에 오도록 */
+    box-shadow: 0 8px 32px rgba(107, 127, 255, 0.3);
+    border-radius: var(--card-radius);
+    color: white;
+    width: 100%;
+    height: 140px;
+}
+.card-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    line-height: 1.3;
+}
+.card-content {
+    font-size: 1rem;
+    font-weight: 400;
+    opacity: 0.9;
+    line-height: 1.3;
+}
+.section-title {
+    margin-left: 20px;
+    margin-top: 28px;
+    font-size: 24px;
+    font-weight: 900;
+    font-style: normal;
+    line-height: 100%;
+    color: #3356FE;
+    margin: 16px 0 16px 0;
+    padding-left: 12px;
+    font-weight: 700;
+}
+#equipmentTabsContainer {
+    width: 100%;
+    /* height: 100%; */
+    overflow: hidden;
+    position: relative;
+    padding: 0 0 8px 0;
+}
+.scroll-container {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(100px, 1fr);
+    gap: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 24px;
+}
+.equipment-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+    border: none;
+    border-radius: var(--card-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: transparent;
+    color: #000000;
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 8px;
+    font-size: larger;
+}
+.equipment-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(51, 86, 254, 0.2);
+}
+.equipment-button:hover::before {
+    transform: scaleX(1);
+}
+.equipment-button.active {
+    background: #95a4f0;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(51, 86, 254, 0.4);
+}
+.equipment-button.active::before {
+    transform: scaleX(1);
+    
+    background: rgba(255,255,255,0.4);
+}
+.equipment-button.no-records {
+    background: #e0e8ff;
+    color: #9bb0d6;
+    opacity: 0.7;
+}
+.equipment-button img {
+    width: 104px;
+    height: auto;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+.equipment-button.active img {
+    transform: scale(1.1);
+}
+.equipment-button span {
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+}
+.maintenance-card {
+    background: white;
+    padding: 20px;
+    border-radius: 7px;
+    box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.2);
+    border: none;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.maintenance-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+.card-header {
+    display: flex;
+    justify-content: flex-end;
+    font-family: 'SUIT';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 15px;
+    color:#6A53FF;
+}
+.card-body {
+    flex-grow: 1;
+}
+.manager {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #6A53FF;
+    display: flex;
+    align-items: center;
+}
+.manager-icon {
+    width: 103.7px;
+    height: 103.7px;
+}
+.content {
+    margin-left: 22px;
+    margin-right: 22px;
+    font-size: 0.95rem;
+    color: #495057;
+    line-height: 1.6;
+    font-weight: 500;
+}
+.menu {
+    display: flex;
+    justify-content: center;
+    padding: 12px 0;
+    background: #3356fe;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    border-top: none;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    z-index: 10;
+    height: 85px;
+}
+.menu::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+}
+.menu-icon-container {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 400px;
+    align-items: center;
+}
+.menu-icon {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 12px;
+}
+.menu-icon img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    transition: all 0.3s ease;
+    filter: brightness(0) invert(1);
+}
+.menu-icon:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.1);
+}
+.menu-icon:hover img {
+    transform: scale(1.1);
+}
+.menu-icon span {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+    text-align: center;
+    line-height: 1.2;
+    color: white;
+}
+.badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    color: white;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+.modal-container {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    border-radius: var(--card-radius);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    color: #333;
+    border: none;
+}
+.modal-close:hover {
+    color: #495057;
+}
+.modal-container input:focus, .modal-container textarea:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+.modal-container textarea {
+    background-color: white;
+    resize: vertical;
+    min-height: 120px;
+    margin-bottom: 20px;
+    font-family: inherit;
+}
+.modal-container button {
+    background: var(--gradient-blue);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+.modal-container button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+/* 모바일 반응형 디자인 */
+@media (max-width: 768px) {
+    /* 앱 타이틀 모바일 조정 */
+    .app-title {
+        padding: 0 16px;
+        font-size: 1.1rem;
+    }
+    .logo {
+    height: 32px;
+    width: auto;
+}
+    /* 1. business-info-panel - 배경 이미지 제거, 2/5 높이 */
+    .business-info-panel {
+        background: #ffffff; /* 단색 배경으로 변경 */
+        padding: 4px 16px 0 16px;
+        height: 36vh; /* 전체 높이의 2/5 */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+
+    }
+    .header-flex {
+        color: #3356fe;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 2px;
+        flex-wrap: wrap;
+}
+    .header-title {
+        justify-content: flex-start;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #3356fe;
+    }
+    
+    #clientHeader {
+        color: white;
+        font-size: 1.6rem;
+        font-weight: 700;
+        text-align: left;
+        margin: 12px 4px 4px 4px;
+    }
+    
+    /* 2. business-card를 2행2열로 구성 */
+    .business-card-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    .business-card:nth-child(3) {
+        background: url('public/사업기간_.png') ;
+        background-size: 120%; /* 이미지가 카드 영역을 꽉 채우도록 */
+        background-repeat: no-repeat; /* 이미지가 반복되지 않도록 */
+        background-position: center; /* 이미지가 카드 중앙에 오도록 */
+        box-shadow: 0 8px 32px rgba(74, 94, 255, 0.3);
+        border-radius: var(--card-radius);
+        color: white;
+        width: 100%;
+        height: 140px;
+    }
+
+    .business-card:nth-child(4) {
+        background: url('public/엔지니어담당자_.png') ;
+        background-size: 120%; /* 이미지가 카드 영역을 꽉 채우도록 */
+        background-repeat: no-repeat; /* 이미지가 반복되지 않도록 */
+        background-position: center; /* 이미지가 카드 중앙에 오도록 */
+        box-shadow: 0 8px 32px rgba(107, 127, 255, 0.3);
+        border-radius: var(--card-radius);
+        color: white;
+        width: 100%;
+        height: 140px;
+    }
+    
+    
+    .business-card {
+        min-height: 85px;
+        max-height: 100px;
+    }
+    
+    .business-card::after {
+        width: 50px;
+        height: 50px;
+        right: 3px;
+        bottom: 3px;
+    }
+    
+    .card-title {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+    
+    .card-content {
+        font-size: 0.75rem;
+    }
+    
+    /* 3. equipment-panel을 1/5 높이로, 1행 가로 스크롤 */
+    .equipment-panel {
+        background: #ffffff;
+        padding: 12px 16px 12px 16px;
+        border-radius: 16px 16px 0 0;
+        height: 18vh; /* 전체 높이의 1/5 */
+        overflow: hidden;
+    }
+
+    .equipment-button.active {
+    background: #95a4f0;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: none;
+}
+    
+    .scroll-container {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding: 8px 0;
+        height: 100%;
+    }
+    
+    .scroll-container::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .equipment-button {
+        min-width: 70px;
+        max-width: 70px;
+        height: auto;
+        flex-shrink: 0;
+        padding: 6px;
+    }
+    
+    .equipment-button img {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .equipment-button span {
+        font-size: 9px;
+        margin-top: 3px;
+    }
+    
+    .section-title {
+        font-size: 16px;
+        margin: 6px 0;
+        padding-left: 6px;
+    }
+    
+    /* 4. maintenance-panel을 2/5 높이로, 2행n열 아래 스크롤 */
+    .maintenance-panel {
+        background: white; /* 흰색 배경으로 변경 */
+        padding: 12px 16px 0 16px;
+        height: 40vh; /* 전체 높이의 2/5 */
+        overflow: hidden;
+    }
+    
+    .maintenance-card-wrapper {
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .maintenance-card-scroller {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 8px 0 20px 0;
+    }
+    
+    .maintenance-card {
+        padding: 12px;
+        border-radius: 8px;
+        background-color: #f3f3f3;
+    }
+    
+    .manager {
+        font-size: 1rem;
+    }
+    
+    .manager-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .content {
+        margin: 6px 8px;
+        font-size: 0.75rem;
+    }
+    
+    .card-header {
+        font-size: 10px;
+    }
+    
+    /* 컨테이너 높이 조정 */
+    .container {
+        height: calc(100vh - var(--header-height) - 85px);
+        padding: 0;
+    }
+    
+    /* 검색 관련 모바일 조정 */
+    .search-input-inline.active {
+        width: 140px;
+    }
+    
+    #searchIcon {
+        width: 32px;
+        height: 32px;
+    }
+    .menu{
+        padding: 8px 0;
+        height: 60px;
+    }
+}
+
+/* 데스크톱 버전 유지 */
+@media (min-width: 769px) {
+    .maintenance-card-scroller {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (min-width: 1200px) {
+    .maintenance-card-scroller {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .business-card-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
     </style>
 </head>
 <body>
     <div class="app-title">
-    <div class="header-flex">
-        <img src="public/logo.png" alt="MA집사 Logo" class="logo">
-        <span>MA집사</span>
+    <div class="header-flex_">
+        <img src="public/logo_white.png" alt="MA집사 Logo" class="logo">
+        <span>MA ZiPSA</span>
     </div>
     <div style="display: flex; align-items: center;">
         <div id="searchContainerInline" class="search-container-inline">
@@ -759,51 +831,39 @@
 
 <div class="container">
     <!-- 고정 영역 -->
-    <div class="sticky-top-panel">
+    <div class="business-info-panel">
         <h1 id="clientHeader"></h1>
         
         <div class="business-card-container-wrapper">
             <div class="business-card-container" id="businessCards"></div>
         </div>
-        
+        </div>
+
+        <div class="equipment-panel">
         <div class="section-title">대상장비</div>
         <div id="equipmentTabsContainer">
             <div id="equipmentTabs" class="scroll-container"></div>
         </div>
-        
-        <div class="section-title">작업 내역</div>
     </div>
     
     <!-- 스크롤 영역 -->
-    <div class="maintenance-card-wrapper">
-        <div class="maintenance-card-scroller" id="maintenanceCards"></div>
+     <div class="maintenance-panel">
+        <div class="section-title">유지보수 기록</div>
+        <div class="maintenance-card-wrapper">
+            <div class="maintenance-card-scroller" id="maintenanceCards"></div>
+        </div>
     </div>
-</div>
 
 <div class="menu">
     <div id="menuIcons" class="menu-icon-container"></div>
 </div>
 
     <div id="modalBackdrop" class="modal-backdrop"></div>
-    <div id="regularApplyContainer" class="modal-container">
-        <span class="modal-close">&times;</span>
-        <h2>정기 점검 신청</h2>
-        <div id="calendar"></div>
-        <div id="selectedDate">날짜를 선택해주세요</div>
-        <textarea id="regularContent" placeholder="필요 점검 내역을 작성해주세요."></textarea>
-        <button id="regularApplyBtn">신청하기</button>
-    </div>
-    <div id="emergencyApplyContainer" class="modal-container">
-        <span class="modal-close">&times;</span>
-        <h2>비상 점검 신청</h2>
-        <div id="emergencyCalendarContainer" style="margin-bottom: 15px;">
-             <div style="text-align:center; font-weight: 600; margin-bottom:10px;">날짜 선택 (현재 ~ 7일)</div>
-             <div id="emergencyCalendar"></div>
-             <div id="selectedEmergencyDate">날짜를 선택해주세요</div>
-        </div>
-        <textarea id="emergencyContent" placeholder="필요 점검 내역을 작성해주세요."></textarea>
-        <button id="emergencyApplyBtn">신청하기</button>
-    </div>
+    <div id="modal-placeholder"></div>
+
+    <script src="/regular-modal/regular-modal.js"></script>
+    <script src="/emergency-modal/emergency-modal.js"></script>
+    <script src="/bi-modal/bi-modal.js"></script>
 
 
     <script>
@@ -820,9 +880,10 @@
                 if (!response.ok) throw new Error("데이터를 가져오는 데 실패했습니다.");
                 const clientData = await response.json();
 
+                /*<img src="${clientData.business_info.logoPath}" alt="Logo" class="header-logo">*/
                 document.getElementById("clientHeader").innerHTML = `
                  <div class="header-flex">
-                    <img src="${clientData.business_info.logoPath}" alt="Logo" class="header-logo">
+                    ${clientData.client_name}
                     <span class="header-title">${clientData.business_info.project_name}</span>
                 </div>
                 `;
@@ -841,7 +902,7 @@
 
             let startDate = businessInfo.startDate || "N/A";
             let endDate = businessInfo.endDate || "N/A";
-            let businessPeriod = `${startDate} ~ ${endDate}`;
+            let businessPeriod = `${startDate} ~<br> ${endDate}`;
 
             Object.entries(businessInfo).forEach(([key, value]) => {
                 if (key === "project_name" || key === "startDate" || key === "endDate" || key === "logoPath") return;
@@ -919,9 +980,15 @@
                 }
         
                 const sanitizedName = equipmentData.name.replace(/\s+/g, ""); 
-                // const imagePath = `/public/${sanitizedName}.png`;
-                const imagePath = `/public/서버.png`;
-                const defaultImagePath = "/public/서버.png";
+
+                let currentImagePath;
+                if (index % 2 === 0) { // index는 0부터 시작하니, 0, 2, 4...는 첫 번째, 세 번째, 다섯 번째... (홀수 번째) 요소가 돼!
+                    // 홀수 번째(1st, 3rd, 5th...) 버튼에 사용할 이미지 경로
+                    currentImagePath = `/public/equipment1.png`; // 예시: 홀수 번째용 아이콘
+                } else { // 1, 3, 5...는 두 번째, 네 번째, 여섯 번째... (짝수 번째) 요소가 돼!
+                    // 짝수 번째(2nd, 4th, 6th...) 버튼에 사용할 이미지 경로
+                    currentImagePath = `/public/equipment2.png`; // 예시: 짝수 번째용 아이콘
+                }
         
                 const button = document.createElement("button");
                 button.classList.add("equipment-button");
@@ -943,7 +1010,7 @@
                 };
         
                 button.innerHTML = `
-                    <img src="${imagePath}" onerror="this.onerror=null; this.src='${defaultImagePath}';">
+                    <img src="${currentImagePath}" onerror="this.onerror=null; this.src='${currentImagePath}';">
                     <span>${equipmentData.name}</span>
                 `;
         
@@ -1025,58 +1092,25 @@ document.addEventListener("DOMContentLoaded", () => {
             id:"regularIcon",
             label: "정기신청", 
             customIconPath: "public/정기신청.png", 
-            onClick: () => {
-                document.getElementById("modalBackdrop").style.display = "block";
-                document.getElementById("regularApplyContainer").style.display = "block";
-                initCalendar();
+            onClick: () => {loadModal('regular')
             }
         },
         {
             id:"emergencyIcon",
             label: "비상신청", 
             customIconPath: "public/비상신청.png", 
-            onClick: () => {
-                document.getElementById("modalBackdrop").style.display = "block";
-                document.getElementById("emergencyApplyContainer").style.display = "block";
-                initEmergencyCalendar();
+            onClick: () => {loadModal('emergency')
             }
         },
         {
             label: "BI", 
             customIconPath: "public/bi.png", 
-            onClick: () => { console.log("BI clicked"); }
+            onClick: () => { loadModal('bi')}
         }
     ]);
 
-    document.getElementById("modalBackdrop").addEventListener("click", closeModals);
+    document.getElementById("modalBackdrop").addEventListener("click", closeModal);
     document.querySelectorAll(".modal-close").forEach(button => button.addEventListener("click", closeModals));
-
-    document.getElementById("regularApplyBtn").addEventListener("click", () => {
-        const selectedDates = document.getElementById("selectedDate").getAttribute("data-dates");
-        const content = document.getElementById("regularContent").value;
-        
-        if (selectedDates && JSON.parse(selectedDates).length > 0 && content.trim() !== "") {
-            addRegularApplication(JSON.parse(selectedDates), content);
-            alert("정기 점검이 신청되었습니다.");
-            closeModals();
-        } else {
-            alert("날짜와 내용을 모두 입력해주세요.");
-        }
-    });
-
-    document.getElementById("emergencyApplyBtn").addEventListener("click", () => {
-        const content = document.getElementById("emergencyContent").value;
-        const selectedEmergencyDateEl = document.getElementById("selectedEmergencyDate");
-        const selectedDate = selectedEmergencyDateEl.dataset.date || new Date().toISOString().split('T')[0];
-
-        if (content.trim() !== "") {
-            addEmergencyApplication(selectedDate, content);
-            alert("비상 점검이 신청되었습니다.");
-            closeModals();
-        } else {
-            alert("필요 점검 내역을 작성해주세요.");
-        }
-    });
 });
 
 function updateRegularBadge() {
@@ -1119,111 +1153,43 @@ function updateEmergencyBadge() {
     }
 }
 
-function addRegularApplication(dates, content) {
-    if (window.regularApplications.length >= 10) window.regularApplications.shift();
-    window.regularApplications.push({ dates, content, timestamp: new Date().toISOString() });
-    updateRegularBadge();
-}
+// --- 모달 로딩 및 관리 함수 ---
+        const modalInitializers = {
+            regular: window.initRegularModal,
+            emergency: window.initEmergencyModal,
+            bi: window.initBiModal
+        };
 
-function addEmergencyApplication(date, content) {
-    if (window.emergencyApplications.length >= 10) window.emergencyApplications.shift();
-    window.emergencyApplications.push({ date, content, timestamp: new Date().toISOString() });
-    updateEmergencyBadge();
-}
+        async function loadModal(modalType) {
+            const placeholder = document.getElementById('modal-placeholder');
+            const backdrop = document.getElementById('modalBackdrop');
+            try {
+                const response = await fetch(`/${modalType}-modal/${modalType}-modal.html`);
+                if (!response.ok) throw new Error(`${modalType} 모달 로딩 실패`);
+                placeholder.innerHTML = await response.text();
+                
+                backdrop.style.display = 'block';
+                const modalContainer = placeholder.querySelector('.modal-container');
+                if (modalContainer) modalContainer.style.display = 'block';
 
-function closeModals() {
-    document.getElementById("modalBackdrop").style.display = "none";
-    document.getElementById("regularApplyContainer").style.display = "none";
-    document.getElementById("emergencyApplyContainer").style.display = "none";
-}
+                // 해당 모달의 초기화 함수 호출
+                if (typeof modalInitializers[modalType] === 'function') {
+                    modalInitializers[modalType]();
+                }
 
-function initCalendar() {
-    const calendarEl = document.getElementById("calendar");
-    calendarEl.innerHTML = "";
-    
-    const now = new Date();
-    let currentYear = now.getFullYear();
-    let currentMonth = now.getMonth();
-    let selectedDates = [];
+                // 공통 닫기 이벤트 바인딩
+                backdrop.addEventListener('click', closeModal);
+                placeholder.querySelector('.modal-close').addEventListener('click', closeModal);
 
-    const selectedDateElement = document.getElementById("selectedDate");
-    selectedDateElement.setAttribute("data-dates", JSON.stringify([]));
-    selectedDateElement.textContent = "날짜를 선택해주세요";
-    
-    function renderCalendar() {
-      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-      const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
-      
-      let calendarHTML = `<h3>${currentYear}년 ${currentMonth + 1}월</h3><div class="calendar-grid">`;
-      const days = ['일', '월', '화', '수', '목', '금', '토'];
-      days.forEach(d => calendarHTML += `<div class="calendar-day-header">${d}</div>`);
-      
-      for(let i=0; i < firstDay; i++) calendarHTML += `<div></div>`;
-      
-      for(let i=1; i <= lastDate; i++) {
-          const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-          let classes = 'calendar-day';
-          if(selectedDates.includes(dateString)) classes += ' selected';
-          calendarHTML += `<div class="${classes}" data-date="${dateString}">${i}</div>`;
-      }
-      calendarHTML += `</div>`;
-      calendarEl.innerHTML = calendarHTML;
-      
-      calendarEl.querySelectorAll('.calendar-day').forEach(day => {
-          day.addEventListener('click', (e) => {
-              const date = e.target.dataset.date;
-              if(!date) return;
-              const index = selectedDates.indexOf(date);
-              if(index > -1) {
-                  selectedDates.splice(index, 1);
-                  e.target.classList.remove('selected');
-              } else {
-                  selectedDates.push(date);
-                  e.target.classList.add('selected');
-              }
-              selectedDateElement.setAttribute("data-dates", JSON.stringify(selectedDates));
-              selectedDateElement.textContent = selectedDates.length > 0 ? `선택된 날짜: ${selectedDates.length}개` : "날짜를 선택해주세요";
-          });
-      });
-    }
-    
-    renderCalendar();
-}
+            } catch(error) {
+                console.error(error);
+            }
+        }
 
-function initEmergencyCalendar() {
-    const calendar = document.getElementById("emergencyCalendar");
-    calendar.innerHTML = "";
-    const selectedDateElement = document.getElementById("selectedEmergencyDate");
-    const today = new Date();
-    
-    calendar.style.display = "grid";
-    calendar.style.gridTemplateColumns = "repeat(4, 1fr)";
-    calendar.style.gap = "5px";
-
-    for (let i = 0; i < 7; i++) {
-        const date = new Date();
-        date.setDate(today.getDate() + i);
-        const dateString = date.toISOString().split('T')[0];
-        const dayElement = document.createElement("div");
-        dayElement.classList.add('calendar-day');
-        dayElement.textContent = date.getDate();
-        dayElement.dataset.date = dateString;
-        
-        dayElement.addEventListener('click', (e) => {
-            calendar.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
-            e.target.classList.add('selected');
-            selectedDateElement.textContent = e.target.dataset.date;
-            selectedDateElement.dataset.date = e.target.dataset.date;
-        });
-
-        calendar.appendChild(dayElement);
-    }
-    
-    const firstDay = calendar.firstChild;
-    firstDay.classList.add('selected');
-    selectedDateElement.textContent = firstDay.dataset.date;
-    selectedDateElement.dataset.date = firstDay.dataset.date;
-}
+function closeModal() {
+            document.getElementById('modalBackdrop').style.display = 'none';
+            document.getElementById('modal-placeholder').innerHTML = '';
+        }
 
 document.addEventListener('DOMContentLoaded', function() {
     const searchIcon = document.getElementById('searchIcon');
