@@ -31,17 +31,19 @@ body {
     color: #333;
     line-height: 1.6;
     min-height: 100vh;
-    
     overflow: hidden; /* 스크롤바 숨기기 */
+    display: flex;
+    flex-direction: column;
 }
 .container {
     height: 100vh;
     max-width: 100%;
-    margin: 0 auto;
+    margin-bottom: 60px; /* menu 높이 */
     padding: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
 }
 .app-title {
     display: flex;
@@ -62,6 +64,21 @@ body {
 .logo {
     height: 32px;
     width: auto;
+}
+.scroll-area {
+    position: absolute;
+    top: var(--header-height);
+    bottom: 50px; /* menu 높이 */
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+    padding: 0;
+    box-sizing: border-box;
+    /* 크롬, 사파리, 최신 엣지 브라우저에서 스크롤바 숨기기 */
+    &::-webkit-scrollbar {
+        display: none; /* 스크롤바를 아예 표시하지 않음 */
+        /* 또는 width: 0; height: 0; 를 사용해도 돼. */
+    }
 }
 .business-info-panel{
     background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.2)), url('public/login3d.jpg') no-repeat center center;
@@ -101,7 +118,7 @@ body {
     flex-direction: column;
     overflow: hidden; /* 여기를 'hidden'으로 */
 }
-.maintenance-card-wrapper {
+/*.maintenance-card-wrapper {
     flex: 1;
     max-height: unset;
     overflow-y: auto;
@@ -109,11 +126,11 @@ body {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    padding-bottom: 100px; /* ✅ 이 부분을 추가하세요. */
-}
+    padding-bottom: 100px;
+} */
 .maintenance-card-scroller {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 24px;
     padding: 12px 0; /* ✅ 이 부분을 추가하세요. */
     width: 100%;
@@ -125,8 +142,31 @@ body {
     z-index: 1;
     touch-action: pan-y;
 }
-.maintenance-card-wrapper::-webkit-scrollbar {
+.maintenance-card-scroller > .maintenance-card {
+    min-height: 120px;
+}
+/*.maintenance-card-wrapper::-webkit-scrollbar {
     display: none;
+}*/
+/* 페이징 컨트롤 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+.pagination button {
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.pagination button.active {
+    background-color: #3356fe;
+    color: white;
+    border-color: #3356fe;
 }
 
 #searchIcon {
@@ -633,13 +673,13 @@ h1 {
         height: 50px;
     }
     .logo {
-        height: 32px;
+        height: 22px;
         width: auto;
     }
     /* 헤더 영역 */
     .menu {
         padding: 8px 0;
-        height: 60px;
+        height: 50px;
         flex-shrink: 0;
     }
 
@@ -915,7 +955,7 @@ h1 {
 </div>
 
 <div class="container">
-    <!-- 고정 영역 -->
+    <div class="scroll-area"> <!-- 이 부분만 스크롤 가능하게 -->
     <div class="business-info-panel">
         <h1 id="clientHeader"></h1>
         
@@ -934,9 +974,10 @@ h1 {
     <!-- 스크롤 영역 -->
      <div class="maintenance-panel">
         <div class="section-title sticky-title">유지보수 기록</div>
-        <div class="maintenance-card-wrapper">
+        <!-- <div class="maintenance-card-wrapper"> -->
             <div class="maintenance-card-scroller" id="maintenanceCards"></div>
-        </div>
+            <div class="pagination" id="pagination"></div>
+        <!-- </div> -->
     </div>
 
 <div class="menu">
@@ -1117,7 +1158,9 @@ h1 {
                 return;
             }
 
-            data.records.forEach((entry,index) => {
+            renderPaginatedCards(data.records);
+
+            /* data.records.forEach((entry,index) => {
                 const card = document.createElement("div");
                 card.classList.add("maintenance-card");
 
@@ -1137,7 +1180,7 @@ h1 {
                 `;
 
                 container.appendChild(card);
-            });
+            }); */
 
             setupMaintenanceCardScrolling();
         }
@@ -1168,6 +1211,53 @@ h1 {
             });
         }
         
+
+        let currentPage = 1;
+const itemsPerPage = 12;
+
+function renderPaginatedCards(data) {
+    const container = document.getElementById("maintenanceCards");
+    const pagination = document.getElementById("pagination");
+
+    container.innerHTML = "";
+    pagination.innerHTML = "";
+
+    const totalItems = data.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageData = data.slice(start, end);
+
+    pageData.forEach(entry => {
+        const card = document.createElement("div");
+        card.classList.add("maintenance-card");
+
+        card.innerHTML = `
+            <div class="card-header"><span class="date">${entry.date}</span></div>
+            <div class="card-body">
+                <div class="manager">
+                    <img src="/public/man.png" class="manager-icon" onerror="this.onerror=null; this.src='/public/man.png';">
+                    <span class="manager-name">${entry.manager}</span>
+                </div>
+                <div class="content">${entry.content}</div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    // 페이지 버튼
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        if (i === currentPage) btn.classList.add("active");
+        btn.addEventListener("click", () => {
+            currentPage = i;
+            renderPaginatedCards(data);
+        });
+        pagination.appendChild(btn);
+    }
+}
 document.addEventListener("DOMContentLoaded", () => {
     window.regularApplications = [];
     window.emergencyApplications = [];
