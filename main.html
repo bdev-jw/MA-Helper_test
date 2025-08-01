@@ -48,7 +48,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 0 240px 0 240px;
-    font-size: 1.4rem;
+    font-size: 1.0rem;
     font-weight: 700;
     background: #3356fe;
     color: white;
@@ -130,8 +130,8 @@ body {
 }
 
 #searchIcon {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: auto;
     cursor: pointer;
     filter: brightness(0) invert(1);
 }
@@ -179,7 +179,7 @@ h1 {
 .header-flex_ {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 2px;
 }
 .header-flex {
     display: flex;
@@ -191,6 +191,7 @@ h1 {
 }
 .header-flex .header-title {
     font-size: 0.7em; /* client_name보다 살짝 작게 표시 (예시) */
+    font-weight: 500;
 }
 .header-logo {
     height: clamp(48px, 6vw, 64px);
@@ -373,7 +374,7 @@ h1 {
     cursor: pointer;
     transition: all 0.3s ease;
     background: transparent;
-    color: #000000;
+    color: #757575;
     position: relative;
     overflow: hidden;
     padding-bottom: 8px;
@@ -395,13 +396,7 @@ h1 {
 }
 .equipment-button.active::before {
     transform: scaleX(1);
-    
     background: rgba(255,255,255,0.4);
-}
-.equipment-button.no-records {
-    background: #e0e8ff;
-    color: #9bb0d6;
-    opacity: 0.7;
 }
 .equipment-button img {
     width: 76px;
@@ -414,7 +409,7 @@ h1 {
 }
 .equipment-button span {
     font-size: 11px;
-    font-weight: 300;
+    font-weight: 600;
     text-align: center;
     line-height: 1.2;
 }
