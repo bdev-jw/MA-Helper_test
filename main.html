@@ -13,6 +13,7 @@
     padding: 0;
     box-sizing: border-box;
 }
+
 :root {
     --header-height: 67px;
     --primary-blue: #3356fe;
@@ -30,14 +31,15 @@ body {
     color: #333;
     line-height: 1.6;
     min-height: 100vh;
-    height: 100%;
-    overflow: hidden;
+    
+    overflow: hidden; /* 스크롤바 숨기기 */
 }
 .container {
+    height: 100vh;
     max-width: 100%;
     margin: 0 auto;
     padding: 0;
-    height: calc(100vh - var(--header-height) - 85px);
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
@@ -82,29 +84,32 @@ body {
 }
 .equipment-panel {
     background: #ffffff;
-    padding: 24px 240px 120px 240px;
+    padding: 24px 240px 60px 240px;
     border-radius: 24px 24px 0 0;
     height: auto
 }
 .maintenance-panel {
+    flex: 1;
     background: #EAEDFA;
-    padding: 24px 240px 0 240px;
+    padding: 24px 240px;
     flex-grow: 1;
+    overflow-y: auto;
 }
 .maintenance-card-wrapper {
     flex: 1;
-    max-height: 420px;
+    max-height: 380px;
     overflow-y: auto;
     position: relative;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    padding-bottom: 100px; /* ✅ 이 부분을 추가하세요. */
 }
 .maintenance-card-scroller {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
-    padding: 0 8px 20px 8px;
+    padding: 24px 0; /* ✅ 이 부분을 추가하세요. */
     width: 100%;
     height: auto;
     overflow: visible;
@@ -332,12 +337,23 @@ h1 {
 .scroll-container {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(100px, 1fr);
+    justify-content: flex-start;
     gap: 12px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding: 24px;
+    padding: 24px 0 24px 0;
+}
+.scroll-container::-webkit-scrollbar {
+    height: 8px; /* ✅ 스크롤바 높이 설정 */
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+    background-color: rgb(201, 201, 201); /* ✅ 썸 색상 */
+    border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+    background: transparent;
 }
 .equipment-button {
     display: flex;
@@ -355,6 +371,7 @@ h1 {
     overflow: hidden;
     padding-bottom: 8px;
     font-size: larger;
+    width: 360px;
 }
 .equipment-button:hover {
     transform: translateY(-2px);
@@ -396,7 +413,7 @@ h1 {
 }
 .maintenance-card {
     background: white;
-    padding: 20px;
+    padding: 20px 32px;
     border-radius: 7px;
     box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.2);
     border: none;
@@ -429,16 +446,19 @@ h1 {
     color: #6A53FF;
     display: flex;
     align-items: center;
-    margin-top: -25px;
+    gap: 22px;
 }
 .manager-icon {
-    width: 98px;
+    width: 42px;
     height: auto;
     margin-right: -10px;
 }
+.manager-name {
+    position: relative;
+    top: 12px;
+}
 .content {
-    margin-left: 22px;
-    margin-right: 22px;
+    margin-top: 8px;
     font-size: 0.95rem;
     color: #495057;
     line-height: 1.6;
@@ -671,6 +691,7 @@ h1 {
         border-radius: var(--card-radius);
         width: 100%;
         color: white;
+        padding: 12px;
     }
 
     .business-card:nth-child(3) {
@@ -732,15 +753,23 @@ h1 {
         gap: 10px;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
         padding: 8px 0;
         height: calc(100% - 35px);
         box-sizing: border-box;
     }
 
     .scroll-container::-webkit-scrollbar {
-        display: none;
-    }
+    height: 4px; /* ✅ 스크롤바 높이 설정 */
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+    background-color: rgb(201, 201, 201); /* ✅ 썸 색상 */
+    border-radius: 8px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
 
     .equipment-button {
         min-width: 70px;
@@ -798,16 +827,22 @@ h1 {
     }
 
     .manager {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
+        margin-top: -12px;
+        gap: 16px;
     }
 
     .manager-icon {
-        width: 60px;
-        height: 60px;
+        width: 32px;
+        height: 32px;
+    }
+    .manager-name {
+        position: relative;
+        top: 8px;
     }
 
     .content {
-        margin: 6px 8px;
+        margin-top: 6px;
         font-size: 0.75rem;
     }
 
@@ -823,6 +858,16 @@ h1 {
     #searchIcon {
         width: 32px;
         height: 32px;
+    }
+    .menu{
+        padding: 8px 0 4px 0;
+    }
+    .menu-icon img {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        transition: all 0.3s ease;
+        filter: brightness(0) invert(1);
     }
 }
 
@@ -1073,7 +1118,7 @@ h1 {
                     <div class="card-body">
                         <div class="manager">
                             <img src="${imagePath}" class="manager-icon" onerror="this.onerror=null; this.src='${defaultImagePath}';">
-                            ${entry.manager}
+                            <span class="manager-name">${entry.manager}</span>
                         </div>
                         <div class="content">${entry.content}</div>
                     </div>
