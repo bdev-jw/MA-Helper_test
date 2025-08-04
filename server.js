@@ -489,7 +489,7 @@ app.post('/api/ai-chat', async (req, res) => {
   }
   try {
     const result = await together.chat.completions.create({
-      model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+      model: 'Qwen/Qwen2.5-7B-Instruct-Turbo',
       messages: [{ role: 'user', content: prompt }],
     });
     const reply = result.choices?.[0]?.message?.content || '응답 없음';
