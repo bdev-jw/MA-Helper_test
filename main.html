@@ -569,7 +569,7 @@ h1 {
     line-height: 1.2;
     color: white;
 }
-.badge {
+/*badge {
     position: absolute;
     top: -2px;
     right: -2px;
@@ -585,7 +585,7 @@ h1 {
     justify-content: center;
     border: 2px solid white;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
+} */
 .modal-backdrop {
     display: none;
     position: fixed;
@@ -1289,7 +1289,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".modal-close").forEach(button => button.addEventListener("click", closeModals));
 });
 
-function updateRegularBadge() {
+/*function updateRegularBadge() {
     const regularIcon = document.getElementById("regularIcon");
     if (!regularIcon) return;
     
@@ -1327,7 +1327,7 @@ function updateEmergencyBadge() {
       badge.textContent = count;
       emergencyIcon.appendChild(badge);
     }
-}
+} */
 
 // --- 모달 로딩 및 관리 함수 ---
         const modalInitializers = {

@@ -525,6 +525,53 @@ app.post('/api/ai-chat', async (req, res) => {
   }
 });
 
+// ✅ 엔지니어 개별 시간 메모 스키마
+const TimeMemoSchema = new mongoose.Schema({
+  engineerId: { type: String, required: true },
+  date: { type: String, required: true }, // YYYY-MM-DD
+  time: { type: String, required: true }, // HH:MM
+  text: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const TimeMemo = mongoose.model('TimeMemo', TimeMemoSchema);
+
+// ✅ 엔지니어 시간별 메모 저장
+app.post('/api/engineer-memo', async (req, res) => {
+  try {
+    const { engineerId, date, time, text } = req.body;
+
+    if (!engineerId || !date || !time || !text) {
+      return res.status(400).json({ message: '모든 필드를 입력해야 합니다.' });
+    }
+
+    const memo = new TimeMemo({ engineerId, date, time, text });
+    await memo.save();
+
+    res.status(201).json({ message: '메모 저장 완료', memo });
+  } catch (error) {
+    console.error('❌ 메모 저장 오류:', error);
+    res.status(500).json({ message: '서버 오류', error: error.message });
+  }
+});
+
+// ✅ 특정 날짜 메모 조회
+app.get('/api/engineer-memo/:engineerId', async (req, res) => {
+  try {
+    const { engineerId } = req.params;
+    const { date } = req.query;
+
+    const query = { engineerId };
+    if (date) query.date = date;
+
+    const memos = await TimeMemo.find(query).sort({ date: 1, time: 1 });
+    res.json(memos);
+  } catch (error) {
+    console.error('❌ 메모 조회 오류:', error);
+    res.status(500).json({ message: '서버 오류', error: error.message });
+  }
+});
+
 // ✅ 404 에러 처리
 app.use((req, res) => {
     console.log(`❌ 404 - 경로를 찾을 수 없음: ${req.method} ${req.path}`);

@@ -442,6 +442,7 @@
         .work-list {
             max-height: 220px;
             overflow-y: auto;
+            padding: 10px
         }
 
         .work-item {
@@ -800,6 +801,67 @@
             display: none;
         }
 
+        /* 페이지네이션 스타일 추가 */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            border-top: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        }
+
+        .pagination-info {
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .pagination-btn {
+            background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(90, 103, 216, 0.4);
+        }
+
+        .pagination-btn:disabled {
+            background: linear-gradient(135deg, #a0aec0 0%, #cbd5e0 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .pagination-btn.current {
+            background: linear-gradient(135deg, #38a169 0%, #48bb78 100%);
+            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.4);
+        }
+
+        .pagination-numbers {
+            display: flex;
+            gap: 5px;
+        }
+
         @media (max-width: 768px) {
             body {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -890,6 +952,16 @@
 
             .stat-number {
                 font-size: 2rem;
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .pagination-controls {
+                justify-content: center;
             }
         }
         /* ✅ 깔끔하고 간격이 좁은 채팅 메시지 스타일 */
@@ -1046,9 +1118,17 @@
                 
                 <div class="card">
                     <div class="card-header">내 업무 기록</div>
-                    <div class="card-body">
+                    <div class="card-body" style="padding: 0;">
                         <div class="work-list" id="workList">
                             <div class="loading">업무 기록을 불러오는 중...</div>
+                        </div>
+                        <div class="pagination-container" id="paginationContainer" style="display: none;">
+                            <div class="pagination-info" id="paginationInfo"></div>
+                            <div class="pagination-controls">
+                                <button class="pagination-btn" id="prevPageBtn" onclick="goToPreviousPage()" disabled>‹</button>
+                                <div class="pagination-numbers" id="paginationNumbers"></div>
+                                <button class="pagination-btn" id="nextPageBtn" onclick="goToNextPage()" disabled>›</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1107,11 +1187,13 @@
         // 전역 변수
         let workRecords = [];
         let currentPage = 1;
-        const recordsPerPage = 10;
+        const recordsPerPage = 5;
         let currentDate = new Date();
         let selectedDate = null;
         let currentUser = null;
         let engineerAssignments = []; // 엔지니어의 할당 정보 저장
+        let isSearchMode = false; // 검색 모드 여부
+        let searchResults = []; // 검색 결과 저장
         
         const API_BASE = 'https://ma-helper-test-1.onrender.com/api';
 
@@ -1121,20 +1203,6 @@
      */
     // ✅ 대화 히스토리 저장용 변수
     let chatHistory = [];
-
-    function filterRecordsByDate(queryText, records) {
-        const dateRegex = /(\d{4})[.\-/년 ]*(\d{1,2})[월]?/;  // 2025년 6월, 2025/06, 2025-06
-        const match = queryText.match(dateRegex);
-        if (!match) return records;
-
-        const year = parseInt(match[1], 10);
-        const month = parseInt(match[2], 10);
-
-        return records.filter(record => {
-            const d = new Date(record.date);
-            return d.getFullYear() === year && (d.getMonth() + 1) === month;
-        });
-    }
 
     /**
     * 채팅창에 메시지를 추가하는 헬퍼 함수
@@ -1172,11 +1240,9 @@
     addChatMessage(userQuery, 'user');
     chatInput.value = '';
 
-    const dateFiltered = filterRecordsByDate(userQuery, workRecords);
-    const relevantRecords = dateFiltered
+    const relevantRecords = workRecords
         .filter(r => r.client && r.client !== '기타')
         .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 10)
         .map((r, i) => `${i + 1}. [${r.date}] ${r.project} (${r.client}, ${r.equipment}) - ${r.content_simple || r.content}`)
         .join('\n');
 
@@ -1370,33 +1436,116 @@ ${userQuery}
             });
         }
 
-        // 필터링된 업무 기록을 '최근 업무 기록' 목록에 렌더링하는 함수
-        function renderFilteredWorkRecords(records) {
+        // 페이지네이션과 함께 업무 기록을 렌더링하는 함수
+        function renderWorkRecordsWithPagination(records, page = 1) {
             const workList = document.getElementById('workList');
+            const paginationContainer = document.getElementById('paginationContainer');
+            
             if (records.length === 0) {
-                workList.innerHTML = '<div class="no-data">검색된 업무 기록이 없습니다.</div>';
+                workList.innerHTML = isSearchMode ? 
+                    '<div class="no-data">검색된 업무 기록이 없습니다.</div>' : 
+                    '<div class="no-data">등록된 업무 기록이 없습니다.</div>';
+                paginationContainer.style.display = 'none';
                 return;
             }
 
+            // 페이지네이션 계산
+            const totalPages = Math.ceil(records.length / recordsPerPage);
+            const startIndex = (page - 1) * recordsPerPage;
+            const endIndex = startIndex + recordsPerPage;
+            const recordsToShow = records.slice(startIndex, endIndex);
+
+            // 상태 매핑
             const statusMap = { '대기': 'pending', '승인': 'approved', '반려': 'rejected' };
-            // 검색 결과는 최신순으로 정렬하여 상위 8개만 표시
-            const sortedRecords = records.sort((a, b) => new Date(b.date) - new Date(a.date));
-            workList.innerHTML = sortedRecords.slice(0, 8).map(work => `
+
+            // 업무 기록 렌더링
+            workList.innerHTML = recordsToShow.map(work => `
                 <div class="work-item" onclick="editWork('${work.id}')">
-                     <div class="work-header">
+                    <div class="work-header">
                         <div class="project-name">${work.project}</div>
                         <div>
                            <span class="work-date">${formatDate(work.date)}</span>
-                           <span class="work-status ${statusMap[work.status] || 'approved'}">${work.status || '승인'}</span>
                         </div>
                     </div>
                     <div class="work-meta">${work.client} · ${work.equipment}</div>
                     <div class="work-content">${work.content}</div>
                 </div>
             `).join('');
+
+            // 페이지네이션 표시
+            if (totalPages > 1) {
+                paginationContainer.style.display = 'flex';
+                updatePaginationControls(page, totalPages, records.length);
+            } else {
+                paginationContainer.style.display = 'none';
+            }
         }
 
-        // 검색 UI 이벤트 리스너 설정 함수
+        // 페이지네이션 컨트롤 업데이트
+        function updatePaginationControls(currentPage, totalPages, totalRecords) {
+            const paginationInfo = document.getElementById('paginationInfo');
+            const paginationNumbers = document.getElementById('paginationNumbers');
+            const prevPageBtn = document.getElementById('prevPageBtn');
+            const nextPageBtn = document.getElementById('nextPageBtn');
+
+            // 정보 표시
+            const startRecord = (currentPage - 1) * recordsPerPage + 1;
+            const endRecord = Math.min(currentPage * recordsPerPage, totalRecords);
+            paginationInfo.textContent = `${startRecord}-${endRecord} / 총 ${totalRecords}개`;
+
+            // 이전/다음 버튼 상태
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+
+            // 페이지 번호 버튼들
+            paginationNumbers.innerHTML = '';
+            
+            // 표시할 페이지 범위 계산 (최대 5개 페이지 표시)
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            // 끝에서 시작점 조정
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `pagination-btn ${i === currentPage ? 'current' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => goToPage(i);
+                paginationNumbers.appendChild(pageBtn);
+            }
+        }
+
+        // 특정 페이지로 이동
+        function goToPage(page) {
+            currentPage = page;
+            if (isSearchMode) {
+                renderWorkRecordsWithPagination(searchResults, page);
+            } else {
+                updateWorkList();
+            }
+        }
+
+        // 이전 페이지로 이동
+        function goToPreviousPage() {
+            if (currentPage > 1) {
+                goToPage(currentPage - 1);
+            }
+        }
+
+        // 다음 페이지로 이동
+        function goToNextPage() {
+            const records = isSearchMode ? searchResults : workRecords.filter(work => work.client !== '기타');
+            const totalPages = Math.ceil(records.length / recordsPerPage);
+            if (currentPage < totalPages) {
+                goToPage(currentPage + 1);
+            }
+        }
+
+        // 검색 UI 이벤트 리스너 설정 함수 (수정됨)
         function setupSearchEventListeners() {
             const searchIcon = document.getElementById('searchIcon');
             const searchInputInline = document.getElementById('searchInputInline');
@@ -1408,17 +1557,24 @@ ${userQuery}
                     searchInputInline.focus();
                 } else {
                     searchInputInline.value = '';
-                    updateWorkList(); // 원래 목록으로 복원
+                    // 검색 모드 해제
+                    isSearchMode = false;
+                    currentPage = 1;
+                    updateWorkList();
                 }
             });
 
             searchInputInline.addEventListener('input', function(event) {
                 const searchTerm = event.target.value.toLowerCase().trim();
                 if (searchTerm) {
-                    const searchResults = searchWorkRecords(searchTerm);
-                    renderFilteredWorkRecords(searchResults);
+                    isSearchMode = true;
+                    searchResults = searchWorkRecords(searchTerm);
+                    currentPage = 1; // 검색 시 첫 페이지로
+                    renderWorkRecordsWithPagination(searchResults, 1);
                 } else {
-                    updateWorkList(); // 검색어가 없으면 원래 목록으로 복원
+                    isSearchMode = false;
+                    currentPage = 1;
+                    updateWorkList();
                 }
             });
             
@@ -1427,6 +1583,8 @@ ${userQuery}
                 if (event.key === 'Escape') {
                     searchInputInline.value = '';
                     searchInputInline.classList.remove('active');
+                    isSearchMode = false;
+                    currentPage = 1;
                     updateWorkList();
                 }
             });
@@ -1503,77 +1661,11 @@ ${userQuery}
             }
         }
 
-        // 내 업무 목록 UI 업데이트 (상태 표시 추가)
-        
-        function renderPaginatedWorkList(page) {
-            const workList = document.getElementById('workList');
-            const filteredRecords = workRecords.filter(work => work.client && work.client.trim() !== '기타');
-
-            const statusMap = { '대기': 'pending', '승인': 'approved', '반려': 'rejected' };
-            const startIndex = (page - 1) * recordsPerPage;
-            const endIndex = startIndex + recordsPerPage;
-
-            const pageRecords = filteredRecords.slice(startIndex, endIndex);
-
-            if (pageRecords.length === 0) {
-                workList.innerHTML = '<div class="no-data">등록된 업무 기록이 없습니다.</div>';
-                return;
-            }
-
-            workList.innerHTML = pageRecords.map(work => `
-                <div class="work-item" onclick="editWork('${work.id}')">
-                    <div class="work-header">
-                        <div class="project-name">${work.project}</div>
-                        <div>
-                            <span class="work-date">${formatDate(work.date)}</span>
-                            <span class="work-status ${statusMap[work.status] || 'approved'}">${work.status || '승인'}</span>
-                        </div>
-                    </div>
-                    <div class="work-meta">${work.client} · ${work.equipment}</div>
-                    <div class="work-content">${work.content}</div>
-                </div>
-            `).join('');
-        }
-
-        function renderPaginationControls() {
-            const container = document.getElementById('paginationControls');
-            container.innerHTML = '';  // 기존 버튼 제거
-            const totalRecords = workRecords.filter(work => work.client && work.client.trim() !== '기타').length;
-            const totalPages = Math.ceil(totalRecords / recordsPerPage);
-
-            if (totalPages <= 1) return;
-
-            const pagination = document.createElement('div');
-            pagination.style.textAlign = 'center';
-            pagination.style.marginTop = '15px';
-
-            for (let i = 1; i <= totalPages; i++) {
-                const btn = document.createElement('button');
-                btn.textContent = i;
-                btn.className = 'btn';
-                btn.style.margin = '3px';
-                btn.style.padding = '6px 10px';
-                btn.style.fontSize = '0.85rem';
-                if (i === currentPage) {
-                    btn.style.background = '#4c51bf';
-                }
-                btn.addEventListener('click', () => {
-                    currentPage = i;
-                    renderPaginatedWorkList(currentPage);
-                    renderPaginationControls();
-                });
-                pagination.appendChild(btn);
-            }
-
-            workList.appendChild(pagination);
-        }
-
+        // 내 업무 목록 UI 업데이트 (페이지네이션 적용)
         function updateWorkList() {
-            currentPage = 1;
-            renderPaginatedWorkList(currentPage);
-            renderPaginationControls();
+            const filteredRecords = workRecords.filter(work => work.client && work.client.trim() !== '기타');
+            renderWorkRecordsWithPagination(filteredRecords, currentPage);
         }
-
 
         // --- 신규 기능: 팀원 업무 승인 관련 함수 ---
 
@@ -1770,8 +1862,7 @@ ${userQuery}
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         date: date,
-                        content: content,
-                        content_simple: content_simple
+                        content: content
                     })
                 });
 
@@ -1806,9 +1897,6 @@ ${userQuery}
             }
         }
 
-        // --- 여기까지 수정 함수들 ---
-
-
         // 폼 초기화
         function clearForm() {
             document.getElementById('projectSelect').value = '';
@@ -1836,33 +1924,6 @@ ${userQuery}
                 // 폴백: alert 사용
                 alert(message);
             }
-        }
-
-        // 업무 목록 업데이트
-        function updateWorkList() {
-            const workList = document.getElementById('workList');
-
-            // '기타' 고객사 제외한 업무 기록만 필터링
-            const filteredRecords = workRecords.filter(work => {
-                return work.client && work.client.trim() !== '기타';
-            });
-            
-            if (filteredRecords.length === 0) {
-                workList.innerHTML = '<div class="no-data">등록된 업무 기록이 없습니다.</div>';
-                return;
-            }
-            
-            // 최신 8개 기록만 표시하도록 슬라이싱
-            workList.innerHTML = filteredRecords.slice(0, 8).map(work => `
-                <div class="work-item" onclick="editWork('${work.id}')">
-                    <div class="work-header">
-                        <div class="project-name">${work.project}</div>
-                        <div class="work-date">${formatDate(work.date)}</div>
-                    </div>
-                    <div class="work-meta">${work.client} · ${work.performer}</div>
-                    <div class="work-content">${work.content}</div>
-                </div>
-            `).join('');
         }
 
         // 날짜 형식 변환

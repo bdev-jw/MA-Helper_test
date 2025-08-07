@@ -55,12 +55,55 @@ function initCalendar() {
     selectedDateElement.setAttribute("data-dates", JSON.stringify([]));
     selectedDateElement.textContent = "날짜를 선택해주세요";
     
+    // 캘린더 전체에 하나의 이벤트 리스너만 등록 (이벤트 위임)
+    calendarEl.onclick = function(e) {
+        if (e.target.classList.contains('prev-month')) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        } else if (e.target.classList.contains('next-month')) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        } else if (e.target.classList.contains('calendar-day') && e.target.dataset.date) {
+            const date = e.target.dataset.date;
+            const index = selectedDates.indexOf(date);
+            if(index > -1) {
+                selectedDates.splice(index, 1);
+                e.target.classList.remove('selected');
+            } else {
+                selectedDates.push(date);
+                e.target.classList.add('selected');
+            }
+            selectedDateElement.setAttribute("data-dates", JSON.stringify(selectedDates));
+            selectedDateElement.textContent = selectedDates.length > 0 ? `선택된 날짜: ${selectedDates.length}개` : "날짜를 선택해주세요";
+        }
+    };
+    
     function renderCalendar() {
-        // ... (기존 initCalendar의 renderCalendar 로직은 동일)
+        // renderCalendar 함수 내용은 동일하지만 이벤트 리스너 등록 부분은 제거
         const firstDay = new Date(currentYear, currentMonth, 1).getDay();
         const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const today = new Date();
         
-        let calendarHTML = `<h3>${currentYear}년 ${currentMonth + 1}월</h3><div class="calendar-grid">`;
+        let calendarHTML = `
+            <div class="calendar-header">
+                <button class="prev-month" type="button">‹</button>
+                <h3>${currentYear}년 ${currentMonth + 1}월</h3>
+                <button class="next-month" type="button">›</button>
+            </div>
+            <div class="calendar-grid">`;
+        
         const days = ['일', '월', '화', '수', '목', '금', '토'];
         days.forEach(d => calendarHTML += `<div class="calendar-day-header">${d}</div>`);
         
@@ -69,28 +112,46 @@ function initCalendar() {
         for(let i=1; i <= lastDate; i++) {
             const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
             let classes = 'calendar-day';
+            
+            const dayOfWeek = new Date(currentYear, currentMonth, i).getDay();
+            
+            if (dayOfWeek === 0) {
+                classes += ' sunday';
+            } else if (dayOfWeek === 6) {
+                classes += ' saturday';
+            }
+            
+            if (today.getFullYear() === currentYear && 
+                today.getMonth() === currentMonth && 
+                today.getDate() === i) {
+                classes += ' today';
+            }
+            
             if(selectedDates.includes(dateString)) classes += ' selected';
+            
             calendarHTML += `<div class="${classes}" data-date="${dateString}">${i}</div>`;
         }
         calendarHTML += `</div>`;
         calendarEl.innerHTML = calendarHTML;
-        
-        calendarEl.querySelectorAll('.calendar-day').forEach(day => {
-            day.addEventListener('click', (e) => {
-                const date = e.target.dataset.date;
-                if(!date) return;
-                const index = selectedDates.indexOf(date);
-                if(index > -1) {
-                    selectedDates.splice(index, 1);
-                    e.target.classList.remove('selected');
-                } else {
-                    selectedDates.push(date);
-                    e.target.classList.add('selected');
-                }
-                selectedDateElement.setAttribute("data-dates", JSON.stringify(selectedDates));
-                selectedDateElement.textContent = selectedDates.length > 0 ? `선택된 날짜: ${selectedDates.length}개` : "날짜를 선택해주세요";
-            });
-        });
     }
-    renderCalendar();
-}
+            renderCalendar();
+        };
+    
+        
+        // 날짜 클릭 이벤트
+    calendarEl.querySelectorAll('.calendar-day').forEach(day => {
+        day.addEventListener('click', (e) => {
+            const date = e.target.dataset.date;
+            if(!date) return;
+            const index = selectedDates.indexOf(date);
+            if(index > -1) {
+                selectedDates.splice(index, 1);
+                e.target.classList.remove('selected');
+            } else {
+                selectedDates.push(date);
+                e.target.classList.add('selected');
+            }
+            selectedDateElement.setAttribute("data-dates", JSON.stringify(selectedDates));
+            selectedDateElement.textContent = selectedDates.length > 0 ? `선택된 날짜: ${selectedDates.length}개` : "날짜를 선택해주세요";
+        });
+    });
