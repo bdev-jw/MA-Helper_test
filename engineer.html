@@ -994,6 +994,49 @@
         overflow-y: auto;
         max-height: 400px;
     }
+    /* 시간별 메모 관련 스타일 */
+    #existingMemosContainer {
+        margin-bottom: 25px;
+        padding: 15px;
+        background-color: #f7fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        max-height: 180px;
+        overflow-y: auto;
+    }
+    #existingMemosContainer h4 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #2d3748;
+        font-size: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 8px;
+    }
+    .memo-list {
+        list-style-type: none;
+        padding: 0;
+    }
+    .memo-list li {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 5px;
+        font-size: 0.9rem;
+        border-bottom: 1px solid #edf2f7;
+    }
+    .memo-list li:last-child {
+        border-bottom: none;
+    }
+    .memo-list strong {
+        color: #5a67d8;
+        margin-right: 10px;
+    }
+    .memo-indicator {
+        font-size: 0.75rem;
+        color: #27ae60;
+        font-weight: 600;
+        text-align: right;
+        margin-top: 5px;
+    }
     </style>
 </head>
 <body>
@@ -1183,18 +1226,21 @@
     <div id="timeMemoModal" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>시간별 메모 등록</h2>
+      <h2 id="memoModalTitle">시간별 메모</h2>
       <button class="close-btn" onclick="closeTimeMemoModal()">&times;</button>
     </div>
     <div class="modal-body">
+      <div id="existingMemosContainer" style="display: none;">
+        <h4>저장된 메모</h4>
+        <ul class="memo-list" id="memoList"></ul>
+      </div>
+
       <div class="form-group">
-        <label for="memoTime">시간 선택</label>
-        <select id="memoTime">
-          <!-- 30분 단위로 자동 생성됨 -->
-        </select>
+        <label for="memoTime">시간</label>
+        <select id="memoTime"></select>
       </div>
       <div class="form-group">
-        <label for="memoText">메모 내용</label>
+        <label for="memoText">내용</label>
         <textarea id="memoText" placeholder="간단한 내용을 입력하세요"></textarea>
       </div>
     </div>
@@ -1217,6 +1263,7 @@
         let engineerAssignments = []; // 엔지니어의 할당 정보 저장
         let isSearchMode = false; // 검색 모드 여부
         let searchResults = []; // 검색 결과 저장
+        let timeMemos=[]; // 시간별 메모 저장
         
         const API_BASE = 'https://ma-helper-test-1.onrender.com/api';
 
@@ -1391,6 +1438,17 @@ ${userQuery}
                 document.getElementById('waitPanel').style.display = 'block';
                 document.getElementById('approvalPanel').style.display = 'none'; // 팀원은 승인 패널 숨김
                 renderPendingWorks()
+            }
+            // 🔽 새로운 함수 추가
+            // 엔지니어의 모든 시간별 메모 로드
+            async function loadTimeMemos() {
+                try {
+                    const response = await fetch(`${API_BASE}/engineer-memo/${currentUser.id}`);
+                    if (!response.ok) throw new Error('메모를 불러올 수 없습니다.');
+                    timeMemos = await response.json();
+                } catch (error) {
+                    console.error('메모 로드 실패:', error);
+                }
             }
         }
 
@@ -1972,8 +2030,9 @@ ${userQuery}
             // 3. 달력 다시 그림 (선택 강조 포함)
             updateCalendar();
 
-            // 시간 메모 모달 열기
-            openTimeMemoModal(dateString); // 👈 추가
+            // 4. 해당 날짜의 메모를 찾아 모달 열기
+            const memosForDate = timeMemos.filter(memo => memo.date === dateString);
+            openTimeMemoModal(dateString, memosForDate);
         }
 
         // 2025년 대한민국 공휴일 정보 (월별로 날짜만 포함)
@@ -2049,12 +2108,19 @@ ${userQuery}
 
                 const dayWorks = workRecords.filter(work => work.date === dateString && work.client !== '기타');
                 
-                // dayClass를 day-number div에 적용
-                let dayContent = `<div class="day-number ${dayClass}">${day}</div>`;
-                if (dayWorks.length > 0) {
-                    dayContent += `<div class="work-count">${dayWorks.length}</div>`;
-                    dayContent += `<div class="work-preview">${dayWorks[0].project}</div>`;
-                }
+                // --- 🔽 메모 관련 로직 추가 ---
+        const dayMemos = timeMemos.filter(memo => memo.date === dateString);
+
+        let dayContent = `<div class="day-number ${dayClass}">${day}</div>`;
+        if (dayWorks.length > 0) {
+            dayContent += `<div class="work-count">${dayWorks.length}</div>`;
+            dayContent += `<div class="work-preview">${dayWorks[0].project}</div>`;
+        }
+        // 메모가 있으면 아이콘 표시
+        if (dayMemos.length > 0) {
+            dayContent += `<div class="memo-indicator">📝 ${dayMemos.length}건</div>`;
+        }
+        // --- 🔼 여기까지 ---
 
                 calendarHTML += `<div class="${classes}" onclick="selectDate('${dateString}')">${dayContent}</div>`;
             }
@@ -2118,11 +2184,35 @@ ${userQuery}
             }
         }
 
-        function openTimeMemoModal(dateString) {
+        // openTimeMemoModal 함수 전체 교체
+        function openTimeMemoModal(dateString, memos = []) {
             populateTimeDropdown();
             selectedDateString = dateString;
             document.getElementById('memoText').value = '';
-            document.getElementById('memoTime').value = '09:00';
+            
+            // 모달 제목에 날짜 표시
+            const modalTitle = document.getElementById('memoModalTitle');
+            modalTitle.textContent = `${dateString} 메모`;
+
+            const existingMemosContainer = document.getElementById('existingMemosContainer');
+            const memoList = document.getElementById('memoList');
+            memoList.innerHTML = ''; // 목록 초기화
+
+            if (memos.length > 0) {
+                // 시간순으로 정렬
+                memos.sort((a, b) => a.time.localeCompare(b.time));
+
+                memos.forEach(memo => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<strong>${memo.time}</strong> <span>${memo.text}</span>`;
+                    memoList.appendChild(listItem);
+                });
+                existingMemosContainer.style.display = 'block';
+            } else {
+                existingMemosContainer.style.display = 'none';
+            }
+
+            // 모달 표시
             document.getElementById('timeMemoModal').classList.add('visible');
         }
 
@@ -2130,6 +2220,7 @@ ${userQuery}
             document.getElementById('timeMemoModal').classList.remove('visible');
         }
 
+        // saveTimeMemo 함수 전체 교체
         async function saveTimeMemo() {
             const time = document.getElementById('memoTime').value;
             const text = document.getElementById('memoText').value.trim();
@@ -2154,9 +2245,14 @@ ${userQuery}
                 });
 
                 if (res.ok) {
+                    const newMemoData = await res.json();
+                    // 전역 메모 배열에 새 메모 추가
+                    timeMemos.push(newMemoData.memo);
+                    
                     alert('메모가 저장되었습니다.');
                     closeTimeMemoModal();
-                    // 나중에 calendar에 표시 추가 가능
+                    // 달력을 새로고침하여 메모 아이콘 즉시 반영
+                    updateCalendar();
                 } else {
                     alert('저장에 실패했습니다.');
                 }
