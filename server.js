@@ -431,6 +431,49 @@ app.get('/api/engineer-records/:engineerId', async (req, res) => {
     }
 });
 
+// ✅ 엔지니어 기록 수정 API
+app.patch('/api/engineer-record/:recordId', async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    const { date, content } = req.body; // 수정할 항목
+    const [clientId, equipment, originalDate, recordIndex] = recordId.split('_');
+
+    const client = await Client.findOne({ id: clientId });
+    if (!client) return res.status(404).json({ message: "고객사를 찾을 수 없습니다." });
+
+    const records = client.maintenance_data?.[equipment];
+    const record = records?.[parseInt(recordIndex)];
+
+    if (!record || record.date !== originalDate) {
+      return res.status(404).json({ message: "해당 업무 기록을 찾을 수 없습니다." });
+    }
+
+    // 필드 수정
+    if (date) record.date = date;
+    if (content) record.content = content;
+
+    // 수정되었음을 mongoose에 알림
+    client.markModified(`maintenance_data.${equipment}`);
+    await client.save();
+
+    res.json({
+      message: '업무 기록 수정 완료',
+      updatedRecord: {
+        id: recordId,
+        client: client.client_name,
+        equipment,
+        date: record.date,
+        performer: record.manager,
+        content: record.content,
+        status: record.status
+      }
+    });
+  } catch (error) {
+    console.error('❌ 기록 수정 오류:', error);
+    res.status(500).json({ message: '서버 오류', error: error.message });
+  }
+});
+
 // 업무 기록 상태 변경(승인/반려) API
 app.patch('/api/engineer-record/:recordId/approve', async (req, res) => {
   try {
