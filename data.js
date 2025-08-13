@@ -344,7 +344,7 @@ const engineers = [
       position: "과장",
       experience: "6년차",
       photo: "/public/profile_hjy.jpg",
-      role:'reader',
+      role:'leader',
       team: '1팀',
       assignments: [
         {

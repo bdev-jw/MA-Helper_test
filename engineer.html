@@ -749,10 +749,6 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .work-status.pending { 
-            background: linear-gradient(135deg, #ed8936 0%, #f6ad55 100%);
-            box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
-        }
         .work-status.approved { 
             background: linear-gradient(135deg, #38a169 0%, #48bb78 100%);
             box-shadow: 0 2px 8px rgba(56, 161, 105, 0.3);
@@ -1178,22 +1174,18 @@
 
                 <div class="card" id="waitPanel">
                     <div class="card-header">승인 대기</div>
-                    <div class="card-body">
                         <div class="work-list" id="waitList">
                             <div class="no-data">기록이 없습니다</div>
                         </div>
                     </div>
-                </div>
 
                 <div class="card" id="approvalPanel">
                     <div class="card-header">팀원 업무 승인</div>
-                    <div class="card-body">
                         <div class="work-list" id="approvalList">
                             <div class="no-data">승인 대기 중인 기록이 없습니다.</div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -1744,7 +1736,8 @@ ${userQuery}
 
         // 내 업무 목록 UI 업데이트 (페이지네이션 적용)
         function updateWorkList() {
-            const filteredRecords = workRecords.filter(work => work.client && work.client.trim() !== '기타');
+            const filteredRecords = workRecords.filter(work => 
+                work.status === '승인' && work.client && work.client.trim() !== '기타');
             renderWorkRecordsWithPagination(filteredRecords, currentPage);
         }
 
@@ -1840,7 +1833,6 @@ ${userQuery}
                         <div class="project-name">${work.project}</div>
                         <div>
                             <span class="work-date">${formatDate(work.date)}</span>
-                            <span class="work-status pending">${work.status}</span>
                         </div>
                     </div>
                     <div class="work-meta">${work.client} · ${work.equipment}</div>
@@ -1883,6 +1875,7 @@ ${userQuery}
                     clearForm();
                     workRecords.unshift(newRecord);
                     updateWorkList();
+                    renderPendingWorks();
                     updateCalendar();
                     updateStats();
                 } else {
@@ -2105,8 +2098,11 @@ ${userQuery}
                 if (isOtherMonth) classes += ' other-month';
                 if (isToday) classes += ' today';
                 if (isSelected) classes += ' selected';
-
-                const dayWorks = workRecords.filter(work => work.date === dateString && work.client !== '기타');
+                const dayWorks = workRecords.filter(work => 
+                    work.date === dateString && 
+                    work.status === '승인' && // '승인' 상태인 기록만 카운트
+                    work.client !== '기타'
+                );
                 
                 // --- 🔽 메모 관련 로직 추가 ---
         const dayMemos = timeMemos.filter(memo => memo.date === dateString);

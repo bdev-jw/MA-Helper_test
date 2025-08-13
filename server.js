@@ -471,9 +471,6 @@ app.get('/api/team-records/:leaderId', async (req, res) => {
       return res.status(403).json({ message: "팀장 권한이 없습니다." });
     }
 
-    const teamMembers = await Engineer.find({ team: leader.team, role: 'member' });
-    const memberNames = teamMembers.map(m => m.name);
-
     const clients = await Client.find({});
     const recordsToApprove = [];
 
@@ -481,7 +478,7 @@ app.get('/api/team-records/:leaderId', async (req, res) => {
       Object.entries(client.maintenance_data || {}).forEach(([equipment, list]) => {
         if (Array.isArray(list)) {
             list.forEach((record, index) => {
-                if (memberNames.includes(record.manager) && record.status === '대기') {
+                if (record.status === '대기') {
                     recordsToApprove.push({
                         id: `${client.id}_${equipment}_${record.date}_${index}`,
                         client: client.client_name,
