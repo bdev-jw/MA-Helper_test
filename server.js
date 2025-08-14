@@ -260,6 +260,13 @@ app.post('/api/engineer-record', async (req, res) => {
     try {
         const { manager, client, project, equipment, date, content, content_simple } = req.body; // ← 수정: content_simple 추가
 
+        console.log(`📥 [요청 수신] /api/engineer-record
+          작성자: ${manager}
+          고객사: ${client}
+          프로젝트: ${project}
+          장비: ${equipment}
+          날짜: ${date}`);
+
         if (!manager || !client || !project || !equipment || !date || !content || !content_simple) { // ← 수정: content_simple 검증
             return res.status(400).json({ message: '필수 항목(업무 요약 포함) 누락' });
         }
@@ -291,19 +298,20 @@ app.post('/api/engineer-record', async (req, res) => {
         clientDoc.markModified(`maintenance_data.${equipmentKey}`);
         await clientDoc.save();
         
-        const savedRecordForResponse = {
-             id: `${clientDoc.id}_${equipmentKey}_${date}_${new Date().getTime()}`,
-             project: clientDoc.business_info?.project_name || equipmentKey,
-             client: clientDoc.client_name,
-             equipment: equipmentKey,
-             date: newRecord.date,
-             performer: newRecord.manager,
-             content: newRecord.content,               // ← 상세 내용 (엔지니어용)
-             content_simple: newRecord.content_simple, // ← 추가: 업무 요약 (엔지니어용)
-             status: newRecord.status
-        };
+        // ✅ 저장 성공 로그 남기기
+        console.log(`📌 [업무 기록 저장] ${manager} - ${client}/${equipmentKey} (${date}) 저장 완료`);
 
-        res.status(201).json(savedRecordForResponse);
+        res.status(201).json({
+            id: `${clientDoc.id}_${equipmentKey}_${date}_${new Date().getTime()}`,
+            project: clientDoc.business_info?.project_name || equipmentKey,
+            client: clientDoc.client_name,
+            equipment: equipmentKey,
+            date: newRecord.date,
+            performer: newRecord.manager,
+            content: newRecord.content,
+            content_simple: newRecord.content_simple,
+            status: newRecord.status
+        });
 
     } catch (error) {
         console.error("❌ 기록 저장 오류:", error);
@@ -388,9 +396,11 @@ app.get('/api/clients', async (req, res) => {
 // 엔지니어별 업무 기록 조회 - 수정됨
 app.get('/api/engineer-records/:engineerId', async (req, res) => {
     try {
-        const engineerId = req.params.engineerId;
-        const engineer = await Engineer.findOne({ id: engineerId });
+        console.log(`🔍 [조회 요청] /api/engineer-records/${req.params.engineerId}`);
+
+        const engineer = await Engineer.findOne({ id: req.params.engineerId });
         if (!engineer) {
+            console.warn(`⚠️ 엔지니어 ${req.params.engineerId}를 찾을 수 없음`);
             return res.json([]);
         }
         
@@ -422,6 +432,8 @@ app.get('/api/engineer-records/:engineerId', async (req, res) => {
                 });
             }
         });
+
+                console.log(`📊 [조회 결과] ${engineerRecords.length} 건 반환`);
         
         engineerRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
         res.json(engineerRecords);
@@ -434,6 +446,9 @@ app.get('/api/engineer-records/:engineerId', async (req, res) => {
 // ✅ 엔지니어 기록 수정 API
 app.patch('/api/engineer-record/:recordId', async (req, res) => {
   try {
+
+    console.log(`🔄 [상태 변경 요청] /api/engineer-record/${req.params.recordId}/approve`);
+
     const { recordId } = req.params;
     const { date, content } = req.body; // 수정할 항목
     const [clientId, equipment, originalDate, recordIndex] = recordId.split('_');
@@ -456,18 +471,9 @@ app.patch('/api/engineer-record/:recordId', async (req, res) => {
     client.markModified(`maintenance_data.${equipment}`);
     await client.save();
 
-    res.json({
-      message: '업무 기록 수정 완료',
-      updatedRecord: {
-        id: recordId,
-        client: client.client_name,
-        equipment,
-        date: record.date,
-        performer: record.manager,
-        content: record.content,
-        status: record.status
-      }
-    });
+    console.log(`✅ [상태 변경 완료] ${record.manager} - ${client.client_name}/${equipment} (${status})`);
+
+        res.json({ message: '상태 변경 완료', updatedRecord: record });
   } catch (error) {
     console.error('❌ 기록 수정 오류:', error);
     res.status(500).json({ message: '서버 오류', error: error.message });
