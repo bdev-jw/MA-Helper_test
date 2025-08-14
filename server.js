@@ -489,36 +489,55 @@ app.patch('/api/engineer-record/:recordId', async (req, res) => {
   }
 });
 
-// 업무 기록 상태 변경(승인/반려) API
+// ✅ 업무 기록 승인/반려 API - 반려 시 DB 삭제 기능 추가
 app.patch('/api/engineer-record/:recordId/approve', async (req, res) => {
-  try {
-    const { status, reviewer } = req.body;
-    const { recordId } = req.params;
-    
-    const [clientId, equipment, originalDate, recordIndex] = recordId.split('_');
-    
-    const client = await Client.findOne({ id: clientId });
-    if (!client) return res.status(404).json({ message: "고객사를 찾을 수 없습니다." });
+    try {
+        console.log(`🔄 [상태 변경 요청] /api/engineer-record/${req.params.recordId}/approve`);
 
-    const records = client.maintenance_data?.[equipment];
-    const record = records?.[parseInt(recordIndex)];
+        const { status, reviewer } = req.body;
+        const { recordId } = req.params;
+        const [clientId, equipment, originalDate, recordIndex] = recordId.split('_');
 
-    if (!record || record.date !== originalDate) {
-        return res.status(404).json({ message: "해당 업무 기록을 찾을 수 없습니다." });
+        const client = await Client.findOne({ id: clientId });
+        if (!client) {
+            console.warn(`⚠️ 고객사 ID ${clientId}를 찾을 수 없음`);
+            return res.status(404).json({ message: "고객사를 찾을 수 없습니다." });
+        }
+
+        const records = client.maintenance_data?.[equipment];
+        const record = records?.[parseInt(recordIndex)];
+
+        if (!record || record.date !== originalDate) {
+            console.warn('⚠️ 해당 업무 기록을 찾을 수 없음');
+            return res.status(404).json({ message: "해당 업무 기록을 찾을 수 없습니다." });
+        }
+
+        // ✅ 반려인 경우, 해당 기록을 DB에서 삭제
+        if (status === '반려') {
+            records.splice(parseInt(recordIndex), 1); // 해당 index 항목 삭제
+            client.markModified(`maintenance_data.${equipment}`);
+            await client.save();
+
+            console.log(`🗑️ [반려 삭제 완료] ${record.manager} - ${client.client_name}/${equipment} (${originalDate})`);
+
+            return res.json({ message: '반려된 기록은 삭제되었습니다.' });
+        }
+
+        // ✅ 승인 처리
+        record.status = status; // "승인"
+        record.reviewedBy = reviewer;
+        record.reviewedAt = new Date().toISOString();
+
+        client.markModified(`maintenance_data.${equipment}`);
+        await client.save();
+
+        console.log(`✅ [상태 변경 완료] ${record.manager} - ${client.client_name}/${equipment} (${status})`);
+
+        res.json({ message: '상태 변경 완료', updatedRecord: record });
+    } catch (error) {
+        console.error('❌ 상태 변경 오류:', error);
+        res.status(500).json({ message: '서버 오류' });
     }
-
-    record.status = status;
-    record.reviewedBy = reviewer;
-    record.reviewedAt = new Date().toISOString();
-
-    client.markModified(`maintenance_data.${equipment}`);
-    await client.save();
-
-    res.json({ message: '상태 변경 완료', updatedRecord: record });
-  } catch(error) {
-     console.error('❌ 상태 변경 오류:', error);
-     res.status(500).json({ message: '서버 오류' });
-  }
 });
 
 // 팀장용: 팀원 승인 대기 기록 조회 API
