@@ -471,9 +471,18 @@ app.patch('/api/engineer-record/:recordId', async (req, res) => {
     client.markModified(`maintenance_data.${equipment}`);
     await client.save();
 
-    console.log(`✅ [상태 변경 완료] ${record.manager} - ${client.client_name}/${equipment} (${status})`);
-
-        res.json({ message: '상태 변경 완료', updatedRecord: record });
+    res.json({
+      message: '업무 기록 수정 완료',
+      updatedRecord: {
+        id: recordId,
+        client: client.client_name,
+        equipment,
+        date: record.date,
+        performer: record.manager,
+        content: record.content,
+        status: record.status
+      }
+    });
   } catch (error) {
     console.error('❌ 기록 수정 오류:', error);
     res.status(500).json({ message: '서버 오류', error: error.message });
