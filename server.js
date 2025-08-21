@@ -308,7 +308,7 @@ app.post('/api/engineer-record', async (req, res) => {
             performer: newRecord.manager,
             content: newRecord.content,
             content_simple: newRecord.content_simple,
-            status: 등록
+            status: '등록'
         });
 
     } catch (error) {
