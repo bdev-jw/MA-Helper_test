@@ -727,74 +727,10 @@
             background: linear-gradient(135deg, #718096 0%, #a0aec0 100%);
         }
 
-        .record-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-
         @media (min-width: 1200px) {
             .record-container {
                 grid-template-columns: 1fr 1fr;
             }
-        }
-        
-        .work-status {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-left: 10px;
-            color: white;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .work-status.approved { 
-            background: linear-gradient(135deg, #38a169 0%, #48bb78 100%);
-            box-shadow: 0 2px 8px rgba(56, 161, 105, 0.3);
-        }
-        .work-status.rejected { 
-            background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
-            box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
-        }
-        
-        .approval-item .work-meta {
-            font-size: 0.95rem;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        
-        .approval-item .work-content {
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .approval-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-
-        .approval-actions .btn {
-            width: auto;
-            padding: 8px 16px;
-            font-size: 0.85rem;
-        }
-        .approval-actions .btn-reject {
-            background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
-            box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
-        }
-        .approval-actions .btn-reject:hover {
-            background: linear-gradient(135deg, #c53030 0%, #e53e3e 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(197, 48, 48, 0.4);
-        }
-        
-        #approvalPanel {
-            display: none;
         }
 
         /* 페이지네이션 스타일 추가 */
