@@ -123,7 +123,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 377px;
+            height: 720px;
         }
 
         .chat-window {
@@ -440,14 +440,14 @@
         }
 
         .work-list {
-            max-height: 220px;
+            max-height: 570px;
             overflow-y: auto;
             padding: 10px
         }
 
         .work-item {
             border-bottom: 1px solid #e2e8f0;
-            padding: 15px 0;
+            padding: 10px 0;
             cursor: pointer;
             transition: all 0.3s ease;
             border-radius: 8px;
@@ -1646,29 +1646,6 @@ ${userQuery}
             const filteredRecords = workRecords.filter(work => 
                 work.status && work.client && work.client.trim() !== '기타');
             renderWorkRecordsWithPagination(filteredRecords, currentPage);
-        }
-
-        function renderPendingWorks() {
-            const waitList = document.getElementById('waitList');
-            const pendingRecords = workRecords.filter(w => w.status === '대기');
-
-            if (pendingRecords.length === 0) {
-                waitList.innerHTML = '<div class="no-data">기록이 없습니다</div>';
-                return;
-            }
-
-            waitList.innerHTML = pendingRecords.map(work => `
-                <div class="work-item">
-                    <div class="work-header">
-                        <div class="project-name">${work.project}</div>
-                        <div>
-                            <span class="work-date">${formatDate(work.date)}</span>
-                        </div>
-                    </div>
-                    <div class="work-meta">${work.client} · ${work.equipment}</div>
-                    <div class="work-content">${work.content}</div>
-                </div>
-            `).join('');
         }
 
         // 업무 기록 추가

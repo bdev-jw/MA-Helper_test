@@ -371,10 +371,10 @@ function pingServer() {
 // 서버가 시작되면 바로 핑 시작
 // 렌더 환경에서는 이 부분이 바로 실행되도록 ensureInitialized 같은 함수를 호출할 수도 있음
 // 또는 간단히 아래처럼 setTimeout을 사용하여 서버 시작 후 바로 호출
-setTimeout(() => {
-    pingServer(); // 첫 호출
-    setInterval(pingServer, PING_INTERVAL); // 이후 주기적으로 호출
-}, 5000); // 서버 시작 5초 후 첫 호출 (서버가 완전히 로드될 시간을 줌)
+// setTimeout(() => {
+//     pingServer(); // 첫 호출
+//     setInterval(pingServer, PING_INTERVAL); // 이후 주기적으로 호출
+// }, 5000); // 서버 시작 5초 후 첫 호출 (서버가 완전히 로드될 시간을 줌)
 
 // ✅ 클라이언트 목록 조회 API 추가 (디버깅용)
 app.get('/api/clients', async (req, res) => {
