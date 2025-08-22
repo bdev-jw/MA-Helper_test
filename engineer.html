@@ -464,6 +464,29 @@
             border-bottom: none;
         }
 
+        .work-item-row {
+            display: grid;
+            grid-template-columns: 100px 150px 150px 120px 1fr;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .work-item-row:hover {
+            background: #f7fafc;
+        }
+
+        .work-cell {
+            font-size: 0.9rem;
+            color: #2d3748;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .work-header {
             display: flex;
             justify-content: space-between;
