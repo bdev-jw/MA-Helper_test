@@ -74,9 +74,20 @@ const EngineerSchema = new mongoose.Schema({
 });
 const Engineer = mongoose.model('Engineer', EngineerSchema);
 
+// ✅ 엔지니어 개별 시간 메모 스키마 (TimeMemo 대신 올바른 위치로 이동)
+const TimeMemoSchema = new mongoose.Schema({
+  engineerId: { type: String, required: true },
+  date: { type: String, required: true }, // YYYY-MM-DD
+  time: { type: String, required: true }, // HH:MM
+  text: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const TimeMemo = mongoose.model('TimeMemo', TimeMemoSchema);
+
 // ✅ 데이터 초기화
 const initializeData = async () => {
-  console.log('📌 데이터 초기화 시작...');
+  console.log('🔌 데이터 초기화 시작...');
   try {
     const existingClients = await Client.countDocuments();
     const existingEngineers = await Engineer.countDocuments();
@@ -260,7 +271,7 @@ app.post('/api/engineer-record', async (req, res) => {
     try {
         const { manager, client, project, equipment, date, content, content_simple } = req.body; // ← 수정: content_simple 추가
 
-        console.log(`📥 [요청 수신] /api/engineer-record
+        console.log(`🔥 [요청 수신] /api/engineer-record
           작성자: ${manager}
           고객사: ${client}
           프로젝트: ${project}
@@ -353,8 +364,6 @@ app.get('/api/test', (req, res) => {
 });
 
 // ⭐ 주기적으로 서버를 깨우는 로직 추가 ⭐
-// 렌더에서 배포된 실제 서비스의 URL로 바꿔줘야 해!
-// 예를 들어, 'https://너의서비스이름.onrender.com' 이런 식일 거야.
 const SERVICE_URL = process.env.SERVICE_URL || 'https://ma-helper-test-1.onrender.com'
 const PING_INTERVAL = process.env.PING_INTERVAL || 60 * 60 * 1000; // 60분마다 한 번씩 (밀리초)
 
@@ -369,8 +378,6 @@ function pingServer() {
 }
 
 // 서버가 시작되면 바로 핑 시작
-// 렌더 환경에서는 이 부분이 바로 실행되도록 ensureInitialized 같은 함수를 호출할 수도 있음
-// 또는 간단히 아래처럼 setTimeout을 사용하여 서버 시작 후 바로 호출
 setTimeout(() => {
     pingServer(); // 첫 호출
     setInterval(pingServer, PING_INTERVAL); // 이후 주기적으로 호출
@@ -431,7 +438,7 @@ app.get('/api/engineer-records/:engineerId', async (req, res) => {
             }
         });
 
-                console.log(`📊 [조회 결과] ${engineerRecords.length} 건 반환`);
+        console.log(`📊 [조회 결과] ${engineerRecords.length} 건 반환`);
         
         engineerRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
         res.json(engineerRecords);
@@ -445,7 +452,7 @@ app.get('/api/engineer-records/:engineerId', async (req, res) => {
 app.patch('/api/engineer-record/:recordId', async (req, res) => {
   try {
 
-    console.log(`🔄 [상태 변경 요청] /api/engineer-record/${req.params.recordId}/approve`);
+    console.log(`📄 [상태 변경 요청] /api/engineer-record/${req.params.recordId}/approve`);
 
     const { recordId } = req.params;
     const { date, content } = req.body; // 수정할 항목
@@ -506,17 +513,6 @@ app.post('/api/ai-chat', async (req, res) => {
   }
 });
 
-// ✅ 엔지니어 개별 시간 메모 스키마
-const TimeMemoSchema = new mongoose.Schema({
-  engineerId: { type: String, required: true },
-  date: { type: String, required: true }, // YYYY-MM-DD
-  time: { type: String, required: true }, // HH:MM
-  text: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
-});
-
-const TimeMemo = mongoose.model('TimeMemo', TimeMemoSchema);
-
 // ✅ 엔지니어 시간별 메모 저장
 app.post('/api/engineer-memo', async (req, res) => {
   try {
@@ -559,24 +555,21 @@ app.patch('/api/engineer-memo/:id', async (req, res) => {
     const { id } = req.params;
     const { time, text } = req.body;
 
-    // ID에 해당하는 메모를 찾아 시간과 텍스트를 업데이트합니다.
-    // { new: true } 옵션은 업데이트된 후의 문서를 반환하도록 합니다.
-    const updatedMemo = await EngineerMemo.findByIdAndUpdate(
+    // TimeMemo 모델 사용 (EngineerMemo가 아닌)
+    const updatedMemo = await TimeMemo.findByIdAndUpdate(
       id,
       { time, text },
       { new: true }
     );
 
     if (!updatedMemo) {
-      // 해당 ID의 메모가 없으면 404 에러를 반환합니다.
       return res.status(404).json({ message: '메모를 찾을 수 없습니다.' });
     }
 
-    // 성공적으로 업데이트된 메모를 클라이언트에 반환합니다.
     res.json(updatedMemo);
   } catch (error) {
-    // 서버 에러가 발생하면 500 에러를 반환합니다.
-    res.status(500).json({ message: '서버 오류가 발생했습니다.', error });
+    console.error('❌ 메모 수정 오류:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.', error: error.message });
   }
 });
 
@@ -585,19 +578,17 @@ app.delete('/api/engineer-memo/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // ID에 해당하는 메모를 찾아 삭제합니다.
-    const deletedMemo = await EngineerMemo.findByIdAndDelete(id);
+    // TimeMemo 모델 사용 (EngineerMemo가 아닌)
+    const deletedMemo = await TimeMemo.findByIdAndDelete(id);
 
     if (!deletedMemo) {
-      // 해당 ID의 메모가 없으면 404 에러를 반환합니다.
       return res.status(404).json({ message: '메모를 찾을 수 없습니다.' });
     }
 
-    // 성공적으로 삭제되었음을 알리는 메시지를 반환합니다.
     res.json({ message: '메모가 성공적으로 삭제되었습니다.' });
   } catch (error) {
-    // 서버 에러가 발생하면 500 에러를 반환합니다.
-    res.status(500).json({ message: '서버 오류가 발생했습니다.', error });
+    console.error('❌ 메모 삭제 오류:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.', error: error.message });
   }
 });
 
