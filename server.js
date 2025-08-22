@@ -553,6 +553,54 @@ app.get('/api/engineer-memo/:engineerId', async (req, res) => {
   }
 });
 
+// 메모 수정 (PATCH) API
+app.patch('/api/engineer-memo/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { time, text } = req.body;
+
+    // ID에 해당하는 메모를 찾아 시간과 텍스트를 업데이트합니다.
+    // { new: true } 옵션은 업데이트된 후의 문서를 반환하도록 합니다.
+    const updatedMemo = await EngineerMemo.findByIdAndUpdate(
+      id,
+      { time, text },
+      { new: true }
+    );
+
+    if (!updatedMemo) {
+      // 해당 ID의 메모가 없으면 404 에러를 반환합니다.
+      return res.status(404).json({ message: '메모를 찾을 수 없습니다.' });
+    }
+
+    // 성공적으로 업데이트된 메모를 클라이언트에 반환합니다.
+    res.json(updatedMemo);
+  } catch (error) {
+    // 서버 에러가 발생하면 500 에러를 반환합니다.
+    res.status(500).json({ message: '서버 오류가 발생했습니다.', error });
+  }
+});
+
+// 메모 삭제 (DELETE) API
+app.delete('/api/engineer-memo/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ID에 해당하는 메모를 찾아 삭제합니다.
+    const deletedMemo = await EngineerMemo.findByIdAndDelete(id);
+
+    if (!deletedMemo) {
+      // 해당 ID의 메모가 없으면 404 에러를 반환합니다.
+      return res.status(404).json({ message: '메모를 찾을 수 없습니다.' });
+    }
+
+    // 성공적으로 삭제되었음을 알리는 메시지를 반환합니다.
+    res.json({ message: '메모가 성공적으로 삭제되었습니다.' });
+  } catch (error) {
+    // 서버 에러가 발생하면 500 에러를 반환합니다.
+    res.status(500).json({ message: '서버 오류가 발생했습니다.', error });
+  }
+});
+
 // ✅ 404 에러 처리
 app.use((req, res) => {
     console.log(`❌ 404 - 경로를 찾을 수 없음: ${req.method} ${req.path}`);
